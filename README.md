@@ -1,94 +1,97 @@
-# 10x Astro Starter
+# Flashcard-project
 
-A modern, opinionated starter template for building fast, accessible, and AI-friendly web applications.
+## Project Description
+
+Flashcard-project is a flashcards web application designed to simplify study processes. The project enables users to quickly create, manage, and review educational flashcards when using LLMs.
 
 ## Tech Stack
 
-- [Astro](https://astro.build/) v5.5.5 - Modern web framework for building fast, content-focused websites
-- [React](https://react.dev/) v19.0.0 - UI library for building interactive components
-- [TypeScript](https://www.typescriptlang.org/) v5 - Type-safe JavaScript
-- [Tailwind CSS](https://tailwindcss.com/) v4.0.17 - Utility-first CSS framework
+- **Frontend:** Astro 5, React 19, TypeScript 5, Tailwind 4, Shadcn/ui
+- **Backend:** Supabase (PostgreSQL, authentication, and database services)
+- **AI Integration:** Utilizes Openrouter.ai to access multiple LLM models for flashcard generation
+- **CI/CD & Hosting:** GitHub Actions for CI/CD pipelines and DigitalOcean (Docker) for hosting
 
-## Prerequisites
+## Getting Started Locally
 
-- Node.js v22.14.0 (as specified in `.nvmrc`)
-- npm (comes with Node.js)
+Follow these steps to run the project on your local machine:
 
-## Getting Started
+1. **Clone the Repository:**
 
-1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-username/10x-cards.git
+   cd 10x-cards
+   ```
 
-```bash
-git clone https://github.com/przeprogramowani/10x-astro-starter.git
-cd 10x-astro-starter
-```
+2. **Set the Node Version:**
 
-2. Install dependencies:
+   Ensure you are using Node version 22.14.0. If you use nvm, run:
 
-```bash
-npm install
-```
+   ```bash
+   nvm use 22.14.0
+   ```
 
-3. Run the development server:
+3. **Install Dependencies:**
 
-```bash
-npm run dev
-```
+   ```bash
+   npm install
+   ```
 
-4. Build for production:
+4. **Run the Development Server:**
 
-```bash
-npm run build
-```
+   ```bash
+   npm run dev
+   ```
+
+5. **Build and Preview:**
+
+   To build the project and run a preview server:
+
+   ```bash
+   npm run build
+   npm run preview
+   ```
 
 ## Available Scripts
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint
-- `npm run lint:fix` - Fix ESLint issues
+The following npm scripts are available in this project:
 
-## Project Structure
+- **`npm run dev`**: Starts the Astro development server.
+- **`npm run build`**: Builds the project for production.
+- **`npm run preview`**: Serves the production build locally.
+- **`npm run astro`**: Runs Astro CLI commands.
+- **`npm run lint`**: Runs ESLint to analyze code quality.
+- **`npm run lint:fix`**: Automatically fixes lint issues.
+- **`npm run format`**: Formats code using Prettier.
 
-```md
-.
-├── src/
-│   ├── layouts/    # Astro layouts
-│   ├── pages/      # Astro pages
-│   │   └── api/    # API endpoints
-│   ├── components/ # UI components (Astro & React)
-│   └── assets/     # Static assets
-├── public/         # Public assets
-```
+## Project Scope
 
-## AI Development Support
+The project scope includes the following features:
 
-This project is configured with AI development tools to enhance the development experience, providing guidelines for:
+- **Automatic Flashcard Generation:** 
+  - Users can paste text and receive AI-generated flashcard suggestions.
+  - Integration with LLM to generate high-quality, automatic flashcard content.
 
-- Project structure
-- Coding practices
-- Frontend development
-- Styling with Tailwind
-- Accessibility best practices
-- Astro and React guidelines
+- **Manual Management:**
+  - Manual creation, editing, and deletion of flashcards.
 
-### Cursor IDE
+- **User Authentication:**
+  - Registration, login, and secure user session management using Supabase.
 
-The project includes AI rules in `.cursor/rules/` directory that help Cursor IDE understand the project structure and provide better code suggestions.
+- **Spaced Repetition Integration:**
+  - Scheduling of flashcards for review based on a spaced repetition algorithm.
 
-### GitHub Copilot
+- **Usage Metrics:**
+  - Tracking the number of flashcards generated automatically and those accepted by the user.
 
-AI instructions for GitHub Copilot are available in `.github/copilot-instructions.md`
+## Project Status
 
-### Windsurf
-
-The `.windsurfrules` file contains AI configuration for Windsurf.
-
-## Contributing
-
-Please follow the AI guidelines and coding practices defined in the AI configuration files when contributing to this project.
+- **Version:** 0.0.1
+- **Status:** Under active development with a focus on delivering the MVP for efficient flashcard creation and spaced repetition learning.
 
 ## License
 
-MIT
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+---
+
+For further documentation or questions, please refer to the project documentation or contact the maintainer.
