@@ -3,7 +3,7 @@ import { z } from "zod";
 import type { FlashcardsCreateCommand } from "../../types";
 import { DEFAULT_USER_ID } from "../../db/supabase.client";
 import { DatabaseError, FlashcardService } from "../../lib/flashcard.service";
-//DOKONCYCC IMPLEMENTACJE
+
 export const prerender = false;
 
 // Validation schema for individual flashcard
@@ -107,7 +107,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
       );
     }
 
-    return new Response(JSON.stringify({ error: "Internal server error" }), {
+    return new Response(JSON.stringify({ error: "Internal server error", details: (error as Error).message }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
     });

@@ -1,9 +1,11 @@
 import { z } from "zod";
 import type { APIRoute } from "astro";
-import type { GenerateFlashcardsCommand, GenerationCreateResponseDto } from "../../types";
-//DOKONCZYC IMPLEMENTACJE
+import type { GenerateFlashcardsCommand } from "../../types";
+import { GenerationService } from "../../lib/generation.service";
+
 export const prerender = false;
 
+// Validation schema for the request body
 const generateFlashcardsSchema = z.object({
   source_text: z
     .string()
@@ -11,9 +13,8 @@ const generateFlashcardsSchema = z.object({
     .max(10000, "Text must not exceed 10000 characters"),
 });
 
-export const POST: APIRoute = async ({ request, locals: _locals }) => {
+export const POST: APIRoute = async ({ request, locals }) => {
   try {
-    //const supabase = locals.supabase;
     // Parse and validate request body
     const body = (await request.json()) as GenerateFlashcardsCommand;
     const validationResult = generateFlashcardsSchema.safeParse(body);
@@ -31,24 +32,19 @@ export const POST: APIRoute = async ({ request, locals: _locals }) => {
       );
     }
 
-    // const generationService = new GenerationService(locals.supabase, {
-    //  apiKey: import.meta.env.OPENROUTER_API_KEY,
-    //});
-    //const result = await generationService.generateFlashcards(body.source_text);
+    // Initialize service and generate flashcards
+    const generationService = new GenerationService(locals.supabase, {
+      apiKey: import.meta.env.OPENROUTER_API_KEY,
+    });
+    const result = await generationService.generateFlashcards(body.source_text);
 
-    const mockResponse: GenerationCreateResponseDto = {
-      generation_id: 0,
-      flashcards_proposals: [],
-      generated_count: 0,
-    };
-
-    return new Response(JSON.stringify(mockResponse), {
+    return new Response(JSON.stringify(result), {
       status: 201,
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
     console.error("Error processing generation request:", error);
-    return new Response(JSON.stringify({ error: "Internal server error" }), {
+    return new Response(JSON.stringify({ error: "Internal server error", details: (error as Error).message }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
     });
