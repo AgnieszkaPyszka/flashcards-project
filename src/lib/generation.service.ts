@@ -4,10 +4,11 @@ import type { SupabaseClient } from "../db/supabase.client";
 import { DEFAULT_USER_ID } from "../db/supabase.client";
 import { OpenRouterService } from "./openrouter.service";
 import { OpenRouterError } from "./openrouter.types";
-import { logger } from "./logger";
+import { Logger } from "./logger";
 
 export class GenerationService {
   private readonly openRouter: OpenRouterService;
+  private readonly logger = new Logger("GenerationService");
   private readonly model = "openai/gpt-4o-mini";
 
   constructor(
@@ -15,7 +16,7 @@ export class GenerationService {
     openRouterConfig?: { apiKey: string }
   ) {
     if (!openRouterConfig?.apiKey) {
-      logger.error("OpenRouter API key is missing. Flashcard generation will fail.");
+      this.logger.error(new Error("OpenRouter API key is missing. Flashcard generation will fail."));
       throw new Error("OpenRouter API key is required");
     }
     this.openRouter = new OpenRouterService({
@@ -116,10 +117,10 @@ Focus on important facts, definitions, concepts, and relationships.`);
       }));
     } catch (error) {
       if (error instanceof OpenRouterError) {
-        logger.error(`AI Service error: ${error.message} (Code: ${error.code}, Status: ${error.status})`);
+        this.logger.error(error, { code: error.code, status: error.status });
         throw new Error(`AI Service error: ${error.message} (${error.code})`);
       }
-      logger.error("Unknown error in callAIService:", error);
+      this.logger.error(error instanceof Error ? error : new Error(String(error)));
       throw error;
     }
   }

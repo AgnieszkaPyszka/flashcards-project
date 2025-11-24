@@ -1,11 +1,31 @@
 ---
 import "../styles/global.css";
+import { Header } from "../components/Header";
 
 interface Props {
   title?: string;
+  showHeader?: boolean;
 }
 
-const { title = "10x Astro Starter" } = Astro.props;
+const { title = "10x Astro Starter", showHeader = true } = Astro.props;
+
+// Check user authentication state
+let userEmail: string | undefined;
+let isAuthenticated = false;
+
+try {
+  const supabase = Astro.locals.supabase;
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (session?.user) {
+    isAuthenticated = true;
+    userEmail = session.user.email;
+  }
+} catch (error) {
+  console.error("Error checking authentication state:", error);
+}
 ---
 
 <!doctype html>
@@ -18,6 +38,9 @@ const { title = "10x Astro Starter" } = Astro.props;
     <title>{title}</title>
   </head>
   <body>
+    {isAuthenticated && showHeader && userEmail && (
+      <Header client:load userEmail={userEmail} />
+    )}
     <slot />
   </body>
 </html>
