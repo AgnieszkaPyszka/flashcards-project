@@ -13,6 +13,14 @@ export default defineConfig({
   server: { port: 3000 },
   vite: {
     plugins: [tailwindcss()],
+    optimizeDeps: {
+      esbuildOptions: {
+        target: "esnext",
+      },
+    },
+    esbuild: {
+      target: "esnext",
+    },
   },
   adapter: node({
     mode: "standalone",

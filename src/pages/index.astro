@@ -2,6 +2,16 @@
 import Welcome from "../components/Welcome.astro";
 import Layout from "../layouts/Layout.astro";
 
+// Additional layer of protection - verify user session
+// Note: Middleware already handles auth, but this provides defense in depth
+const {
+  data: { session },
+} = await Astro.locals.supabase.auth.getSession();
+
+if (!session) {
+  return Astro.redirect("/login");
+}
+
 return Astro.redirect("/generate");
 ---
 

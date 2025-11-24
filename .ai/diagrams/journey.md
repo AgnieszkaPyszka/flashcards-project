@@ -261,4 +261,32 @@ stateDiagram-v2
         WidokMojeFiszki --> MojeFiszki: Zarządzanie fiszkami
         MojeFiszki --> WidokGenerowaniaFiszek: Powrót
         
-        WidokSesjiNauki --> SesjaNauki: Rozpoczę
+        WidokSesjiNauki --> SesjaNauki: Rozpoczęcie sesji
+        SesjaNauki --> WidokGenerowaniaFiszek: Zakończenie sesji
+    }
+
+    Niezalogowany --> Zalogowany: Utworzenie sesji
+    Zalogowany --> Niezalogowany: Wylogowanie
+    Wylogowanie --> StronaLogowania: Sesja zniszczona
+    UtworzenieSesji --> WidokGenerowaniaFiszek: Przekierowanie
+
+    note right of StronaLogowania
+        Formularz zawiera pola email i hasło
+        oraz link do odzyskiwania hasła
+    end note
+
+    note right of StronaRejestracji
+        Formularz zawiera pola email, hasło
+        i potwierdzenie hasła
+    end note
+
+    note right of WidokGenerowaniaFiszek
+        Główny widok aplikacji dostępny
+        po zalogowaniu
+    end note
+```
+
+aniu
+    end note
+```
+
