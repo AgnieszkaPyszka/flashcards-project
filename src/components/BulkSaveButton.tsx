@@ -64,6 +64,7 @@ export function BulkSaveButton({ flashcards, generationId, disabled, onSuccess }
           onClick={() => handleSave(true)}
           disabled={disabled || isSaving || !flashcards.some((card) => card.accepted)}
           className="flex-1"
+          data-testid="save-accepted-flashcards-button"
         >
           {isSaving ? (
             <>
@@ -75,7 +76,13 @@ export function BulkSaveButton({ flashcards, generationId, disabled, onSuccess }
           )}
         </Button>
 
-        <Button onClick={() => handleSave(false)} disabled={disabled || isSaving} variant="outline" className="flex-1">
+        <Button
+          onClick={() => handleSave(false)}
+          disabled={disabled || isSaving}
+          variant="outline"
+          className="flex-1"
+          data-testid="save-all-flashcards-button"
+        >
           {isSaving ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

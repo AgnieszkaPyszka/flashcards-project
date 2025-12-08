@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function SkeletonLoader() {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-testid="skeleton-loader">
       {Array.from({ length: 3 }).map((_, index) => (
         <div key={index} className="border rounded-lg p-4 space-y-3">
           <div className="flex justify-between items-start">

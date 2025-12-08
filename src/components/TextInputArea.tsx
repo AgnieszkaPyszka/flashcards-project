@@ -19,6 +19,7 @@ export function TextInputArea({ value, onChange, disabled }: TextInputAreaProps)
 
       <Textarea
         id="source-text"
+        data-testid="source-text-input"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}

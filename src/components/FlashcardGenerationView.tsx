@@ -19,6 +19,7 @@ export function FlashcardGenerationView() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [generationId, setGenerationId] = useState<number | null>(null);
   const [flashcards, setFlashcards] = useState<FlashcardProposalViewModel[]>([]);
+  const [hasGenerated, setHasGenerated] = useState(false);
 
   const handleTextChange = (value: string) => {
     setTextValue(value);
@@ -50,6 +51,7 @@ export function FlashcardGenerationView() {
           source: "ai-full" as const,
         }))
       );
+      setHasGenerated(true);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "An unexpected error occurred");
     } finally {
@@ -75,10 +77,11 @@ export function FlashcardGenerationView() {
     setTextValue("");
     setFlashcards([]);
     setGenerationId(null);
+    setHasGenerated(false);
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="flashcard-generation-view">
       {errorMessage && <ErrorNotification message={errorMessage} />}
 
       <TextInputArea value={textValue} onChange={handleTextChange} disabled={isLoading} />
@@ -91,9 +94,9 @@ export function FlashcardGenerationView() {
 
       {isLoading && <SkeletonLoader />}
 
-      {flashcards.length > 0 && (
+      {hasGenerated && (
         <>
-          {generationId !== null && (
+          {generationId !== null && flashcards.length > 0 && (
             <BulkSaveButton
               flashcards={flashcards}
               generationId={generationId}

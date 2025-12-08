@@ -10,9 +10,16 @@ interface FlashcardListItemProps {
   onAccept: () => void;
   onReject: () => void;
   onEdit: (front: string, back: string) => void;
+  "data-testid"?: string;
 }
 
-export function FlashcardListItem({ flashcard, onAccept, onReject, onEdit }: FlashcardListItemProps) {
+export function FlashcardListItem({
+  flashcard,
+  onAccept,
+  onReject,
+  onEdit,
+  "data-testid": dataTestId,
+}: FlashcardListItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedFront, setEditedFront] = useState(flashcard.front);
   const [editedBack, setEditedBack] = useState(flashcard.back);
@@ -26,6 +33,7 @@ export function FlashcardListItem({ flashcard, onAccept, onReject, onEdit }: Fla
 
   return (
     <div
+      data-testid={dataTestId}
       className={cn(
         "border rounded-lg p-4 space-y-3 transition-colors h-full",
         flashcard.accepted ? "bg-green-50/50 border-green-200" : "bg-white",
@@ -73,18 +81,29 @@ export function FlashcardListItem({ flashcard, onAccept, onReject, onEdit }: Fla
               disabled={
                 editedFront.length > 200 || editedBack.length > 500 || !editedFront.trim() || !editedBack.trim()
               }
+              data-testid="flashcard-save-button"
             >
               <Save className="h-4 w-4" />
             </Button>
           ) : (
             <>
-              <Button size="icon" variant={flashcard.accepted ? "default" : "outline"} onClick={onAccept}>
+              <Button
+                size="icon"
+                variant={flashcard.accepted ? "default" : "outline"}
+                onClick={onAccept}
+                data-testid="flashcard-accept-button"
+              >
                 <Check className="h-4 w-4" />
               </Button>
-              <Button size="icon" variant="outline" onClick={() => setIsEditing(true)}>
+              <Button
+                size="icon"
+                variant="outline"
+                onClick={() => setIsEditing(true)}
+                data-testid="flashcard-edit-button"
+              >
                 <Edit2 className="h-4 w-4" />
               </Button>
-              <Button size="icon" variant="outline" onClick={onReject}>
+              <Button size="icon" variant="outline" onClick={onReject} data-testid="flashcard-reject-button">
                 <X className="h-4 w-4" />
               </Button>
             </>
