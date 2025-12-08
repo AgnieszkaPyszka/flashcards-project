@@ -95,7 +95,7 @@ export function LoginForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6" noValidate data-test-id="login-form">
       {errorMessage && <ErrorNotification message={errorMessage} />}
 
       <div className="space-y-2">
@@ -109,6 +109,7 @@ export function LoginForm() {
           placeholder="Enter your email"
           aria-invalid={!!fieldErrors.email}
           className={cn(fieldErrors.email && "border-red-500 focus-visible:ring-red-500")}
+          data-test-id="login-email-input"
         />
         {fieldErrors.email && <p className="text-sm text-red-500">{fieldErrors.email}</p>}
       </div>
@@ -124,11 +125,12 @@ export function LoginForm() {
           placeholder="Enter your password"
           aria-invalid={!!fieldErrors.password}
           className={cn(fieldErrors.password && "border-red-500 focus-visible:ring-red-500")}
+          data-test-id="login-password-input"
         />
         {fieldErrors.password && <p className="text-sm text-red-500">{fieldErrors.password}</p>}
       </div>
 
-      <Button type="submit" disabled={isLoading} size="lg" className="w-full">
+      <Button type="submit" disabled={isLoading} size="lg" className="w-full" data-test-id="login-submit-button">
         {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         {isLoading ? "Logging in..." : "Login"}
       </Button>

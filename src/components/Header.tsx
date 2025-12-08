@@ -45,13 +45,7 @@ export function Header({ userEmail }: HeaderProps) {
           <span className="text-sm text-gray-600" aria-label={`Logged in as ${userEmail}`}>
             {userEmail}
           </span>
-          <Button
-            onClick={handleLogout}
-            disabled={isLoggingOut}
-            variant="outline"
-            size="sm"
-            aria-label="Log out"
-          >
+          <Button onClick={handleLogout} disabled={isLoggingOut} variant="outline" size="sm" aria-label="Log out">
             {isLoggingOut ? "Logging out..." : "Log out"}
           </Button>
         </div>
@@ -59,4 +53,3 @@ export function Header({ userEmail }: HeaderProps) {
     </header>
   );
 }
-

@@ -38,9 +38,7 @@ try {
     <title>{title}</title>
   </head>
   <body>
-    {isAuthenticated && showHeader && userEmail && (
-      <Header client:load userEmail={userEmail} />
-    )}
+    {isAuthenticated && showHeader && userEmail && <Header client:load userEmail={userEmail} />}
     <slot />
   </body>
 </html>

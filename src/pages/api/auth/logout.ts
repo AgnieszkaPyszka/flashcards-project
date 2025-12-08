@@ -57,4 +57,3 @@ export const POST: APIRoute = async ({ cookies, locals, redirect }) => {
     );
   }
 };
-
