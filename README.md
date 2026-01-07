@@ -71,7 +71,7 @@ OPENROUTER_API_KEY=your_openrouter_api_key
 For E2E tests with Playwright, create a `.env.test` file in the root directory:
 
 ```
-TEST_BASE_URL=http://localhost:4321
+TEST_BASE_URL=http://localhost:3000
 SUPABASE_URL=your_test_supabase_url
 SUPABASE_KEY=your_test_supabase_key
 ```

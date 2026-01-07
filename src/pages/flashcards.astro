@@ -1,0 +1,22 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import { FlashcardsList } from "@/components/FlashcardsList";
+
+// Additional layer of protection - verify user session
+// Note: Middleware already handles auth, but this provides defense in depth
+const {
+  data: { session },
+} = await Astro.locals.supabase.auth.getSession();
+
+if (!session) {
+  return Astro.redirect("/login");
+}
+---
+
+<Layout title="Moje Fiszki">
+  <div class="container mx-auto px-4 py-8">
+    <h1 class="text-4xl font-bold mb-8">Moje Fiszki</h1>
+    <FlashcardsList client:load />
+  </div>
+</Layout>
+
