@@ -101,7 +101,7 @@
   - **Request JSON**:
     ```json
     {
-      "source_text": "User provided text (1000 to 10000 characters)",
+      "source_text": "User provided text (1000 to 10000 characters)"
     }
     ```
   - **Business Logic**:
@@ -148,25 +148,4 @@
 - **Mechanism**: Token-based authentication using Supabase Auth.
 - **Process**:
   - Users authenticate via `/auth/login` or `/auth/register`, receiving a bearer token.
-  - Protected endpoints require the token in the `Authorization` header.
-  - Database-level Row-Level Security (RLS) ensures that users access only records with matching `user_id`.
-- **Additional Considerations**: Use HTTPS, rate limiting, and secure error messaging to mitigate security risks.
 
-## 4. Validation and Business Logic
-
-- **Validation Rules**:
-  - **Flashcards**:
-    - `front`: Maximum length of 200 characters.
-    - `back`: Maximum length of 500 characters.
-    - `source`: Must be one of `ai-full`, `ai-edited`, or `manual`.
-  - **Generations**:
-    - `source_text`: Must have a length between 1000 and 10000 characters.
-    - `source_text_hash`: Computed for duplicate detection.
-
-- **Business Logic Implementation**:
-  - **AI Generation**:
-    - Validate inputs and call the AI service upon POST `/generations`.
-    - Record generation metadata (model, generated_count, duration) and send generated flashcards proposals to the user.
-    - Log any errors in `generation_error_logs` for auditing and debugging.
-  - **Flashcard Management**:
-    - Automatic update of the `updated_at` field via database triggers when flashcards are modified.

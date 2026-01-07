@@ -37,8 +37,16 @@ export function Header({ userEmail }: HeaderProps) {
   return (
     <header className="border-b border-gray-200 bg-white">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-        <div className="flex items-center">
+        <div className="flex items-center gap-8">
           <h1 className="text-xl font-semibold text-gray-900">Flashcards App</h1>
+          <nav className="flex gap-4">
+            <a href="/generate" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
+              Generuj
+            </a>
+            <a href="/flashcards" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
+              Moje Fiszki
+            </a>
+          </nav>
         </div>
 
         <div className="flex items-center gap-4">
