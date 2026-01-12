@@ -117,3 +117,36 @@ export type GenerationErrorLogDto = Pick<
   GenerationErrorLog,
   "id" | "error_code" | "error_message" | "model" | "source_text_hash" | "source_text_length" | "created_at" | "user_id"
 >;
+
+// ------------------------------------------------------------------------------------------------
+// 11. Create Flashcard Modal Types
+//     Types used by the CreateFlashcardModal component for manual flashcard creation.
+// ------------------------------------------------------------------------------------------------
+
+// Form data for creating a flashcard manually (ViewModel)
+export interface CreateFlashcardFormData {
+  front: string; // Front text value
+  back: string; // Back text value
+}
+
+// Validation errors for the create flashcard form
+export interface CreateFlashcardValidationErrors {
+  front?: string; // Error message for front field
+  back?: string; // Error message for back field
+  general?: string; // General form error
+}
+
+// Props for the CreateFlashcardModal component
+export interface CreateFlashcardModalProps {
+  isOpen: boolean; // Whether the modal is open
+  onClose: () => void; // Function to close the modal
+  onSuccess: (flashcard: FlashcardDto) => void; // Callback after successful creation
+}
+
+// Form state for the create flashcard form
+export interface CreateFlashcardFormState {
+  data: CreateFlashcardFormData; // Form data
+  errors: CreateFlashcardValidationErrors; // Validation errors
+  isSubmitting: boolean; // Whether the form is being submitted
+  apiError: string | null; // Error from API
+}

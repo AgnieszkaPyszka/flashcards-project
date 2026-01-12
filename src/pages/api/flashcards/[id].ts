@@ -146,3 +146,96 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
   }
 };
 
+/**
+ * DELETE /api/flashcards/{id}
+ * Deletes an existing flashcard
+ */
+export const DELETE: APIRoute = async ({ params, locals }) => {
+  const { id } = params;
+
+  try {
+    logger.warn("DELETE /api/flashcards/:id request received", { flashcardId: id });
+
+    // Validate flashcard ID
+    if (!id || isNaN(Number(id))) {
+      return new Response(
+        JSON.stringify({
+          error: "Invalid flashcard ID",
+          details: "Flashcard ID must be a valid number",
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    const flashcardId = Number(id);
+
+    // Get authenticated user
+    const {
+      data: { session },
+    } = await locals.supabase.auth.getSession();
+
+    if (!session) {
+      logger.warn("Unauthorized access attempt to DELETE /api/flashcards/:id", { flashcardId });
+
+      return new Response(
+        JSON.stringify({
+          error: "Unauthorized",
+          details: "You must be logged in to delete flashcards",
+        }),
+        {
+          status: 401,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Delete flashcard using service
+    const flashcardService = new FlashcardService(locals.supabase);
+    await flashcardService.deleteFlashcard(flashcardId, session.user.id);
+
+    logger.warn("DELETE /api/flashcards/:id request successful", {
+      flashcardId,
+      userId: session.user.id,
+    });
+
+    return new Response(JSON.stringify({ message: "Flashcard deleted successfully" }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    logger.error(error as Error, {
+      endpoint: "DELETE /api/flashcards/:id",
+      flashcardId: id,
+    });
+
+    if (error instanceof DatabaseError) {
+      const status = error.code === "NOT_FOUND" ? 404 : 500;
+
+      return new Response(
+        JSON.stringify({
+          error: error.message,
+          details: error.details,
+          code: error.code,
+        }),
+        {
+          status,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    return new Response(
+      JSON.stringify({
+        error: "Internal server error",
+        details: process.env.NODE_ENV === "development" ? (error as Error).message : "An unexpected error occurred",
+      }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  }
+};
