@@ -150,3 +150,93 @@ export interface CreateFlashcardFormState {
   isSubmitting: boolean; // Whether the form is being submitted
   apiError: string | null; // Error from API
 }
+
+// ------------------------------------------------------------------------------------------------
+// Study Session Types - Spaced Repetition
+// ------------------------------------------------------------------------------------------------
+
+// Flashcard for study session (minimal data)
+export interface StudyFlashcardDto {
+  id: number;
+  front: string;
+  back: string;
+  source: Source;
+}
+
+// Statistics for current study session
+export interface SessionStatsDto {
+  due_count: number; // Number of flashcards due for review
+  new_count: number; // Number of new (never reviewed) flashcards
+  learned_count: number; // Number of flashcards in learning phase (review_count > 0)
+}
+
+// Response for GET /study/next
+export interface StudyNextResponseDto {
+  flashcard: StudyFlashcardDto;
+  session_stats: SessionStatsDto;
+}
+
+// Command for POST /study/rate
+export interface RateFlashcardCommand {
+  flashcard_id: number;
+  known: boolean;
+}
+
+// Response for POST /study/rate
+export interface RateFlashcardResponseDto {
+  success: boolean;
+  next_review_date: string; // ISO 8601 timestamp
+  interval_days: number;
+}
+
+// Response for GET /study/stats
+export interface StudyStatsResponseDto {
+  total_flashcards: number;
+  due_today: number;
+  new_cards: number;
+  learned_cards: number;
+  mastered_cards: number;
+  retention_rate: number; // 0.0 to 1.0
+}
+
+// Extended Flashcard type with spaced repetition fields
+export interface FlashcardWithReviewData extends FlashcardDto {
+  next_review_date: string | null;
+  review_count: number;
+  last_reviewed_at: string | null;
+}
+
+// ------------------------------------------------------------------------------------------------
+// Study Session View Model Types
+// ------------------------------------------------------------------------------------------------
+
+// Status of the study session - controls rendering logic
+export type SessionStatus = 'loading' | 'active' | 'empty' | 'complete' | 'error';
+
+// State of a single card in the view
+export interface StudyCardState {
+  flashcard: StudyFlashcardDto | null;
+  isRevealed: boolean;
+}
+
+// Full study session state
+export interface StudySessionState {
+  currentCard: StudyCardState;
+  sessionStats: SessionStatsDto | null;
+  sessionStatus: SessionStatus;
+  error: string | null;
+  isRating: boolean;
+}
+
+// Return type from useStudySession custom hook
+export interface UseStudySessionReturn {
+  currentCard: StudyFlashcardDto | null;
+  sessionStats: SessionStatsDto | null;
+  isRevealed: boolean;
+  sessionStatus: SessionStatus;
+  error: string | null;
+  isRating: boolean;
+  revealCard: () => void;
+  rateCard: (known: boolean) => Promise<void>;
+  retryLoad: () => Promise<void>;
+}
