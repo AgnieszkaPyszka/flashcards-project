@@ -22,6 +22,9 @@ This table is managed by Supabase Auth.
 - updated_at: TIMESTAMPTZ NOT NULL DEFAULT now()
 - generation_id: BIGINT REFERENCES generations(id) ON DELETE SET NULL
 - user_id: UUID NOT NULL REFERENCES users(id)
+- **next_review_date: TIMESTAMPTZ NULL** - Data następnego przeglądu fiszki (NULL dla nowych fiszek)
+- **review_count: INTEGER NOT NULL DEFAULT 0** - Liczba wykonanych przeglądów fiszki
+- **last_reviewed_at: TIMESTAMPTZ NULL** - Data ostatniego przeglądu fiszki
 
 *Trigger: Automatically update the `updated_at` column on record updates.*
 
@@ -61,6 +64,7 @@ This table is managed by Supabase Auth.
 
 - Indeks na kolumnie `user_id` w tabeli flashcards.
 - Indeks na kolumnie `generation_id` w tabeli flashcards.
+- **Indeks na kolumnie `next_review_date` w tabeli flashcards** - dla efektywnego wyszukiwania fiszek do przeglądu.
 - Indeks na kolumnie `user_id` w tabeli generations.
 - Indeks na kolumnie `user_id` w tabeli generation_error_logs.
 
@@ -71,3 +75,12 @@ This table is managed by Supabase Auth.
 ## 5. Dodatkowe uwagi
 
 - Trigger w tabeli flashcards ma automatycznie aktualizować kolumnę `updated_at` przy każdej modyfikacji rekordu.
+
+## 6. Migracja - Dodanie pól spaced repetition
+
+Pola dla spaced repetition zostały dodane do istniejącej tabeli `flashcards`:
+- `next_review_date` - ustawione na NULL dla istniejących fiszek (fiszki gotowe do przeglądu)
+- `review_count` - ustawione na 0 dla istniejących fiszek
+- `last_reviewed_at` - ustawione na NULL dla istniejących fiszek
+
+Migracja znajduje się w pliku: `supabase/migrations/20260112000000_add_spaced_repetition_fields.sql`

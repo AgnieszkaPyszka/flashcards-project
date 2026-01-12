@@ -9,6 +9,7 @@
 - **Flashcards**
   - *Database Table*: `flashcards`
   - Fields include: `id`, `front`, `back`, `source`, `created_at`, `updated_at`, `generation_id`, `user_id`.
+  - Additional fields for spaced repetition (to be added): `next_review_date`, `review_count`, `last_reviewed_at`.
 
 - **Generations**
   - *Database Table*: `generations`
@@ -132,7 +133,86 @@
   - **Response JSON**: Generation details and associated flashcards.
   - **Errors**: 404 Not Found.
 
-### 2.4. Generation Error Logs
+### 2.4. Study Sessions (Sesja Nauki)
+
+**Note**: This section requires additional database schema changes to store spaced repetition metadata:
+- Flashcard learning progress: `next_review_date`, `review_count`, `last_reviewed_at`
+- These fields will be added as additional columns in the `flashcards` table.
+- The implementation will use a simplified spaced repetition algorithm with fixed intervals.
+
+- **GET `/study/next`**
+  - **Description**: Retrieve the next flashcard to study based on the spaced repetition algorithm.
+  - **Query Parameters**:
+    - None (uses authenticated user's data)
+  - **Response JSON**:
+    ```json
+    {
+      "flashcard": {
+        "id": 123,
+        "front": "Question",
+        "back": "Answer",
+        "source": "manual"
+      },
+      "session_stats": {
+        "due_count": 15,
+        "new_count": 5,
+        "learned_count": 100
+      }
+    }
+    ```
+  - **Special Cases**:
+    - If no flashcards are due for review, return 204 No Content
+  - **Errors**: 
+    - 401 Unauthorized if token is invalid
+    - 404 Not Found if user has no flashcards
+
+- **POST `/study/rate`**
+  - **Description**: Submit a rating for a studied flashcard and update the spaced repetition schedule.
+  - **Request JSON**:
+    ```json
+    {
+      "flashcard_id": 123,
+      "known": true
+    }
+    ```
+  - **Validations**:
+    - `flashcard_id`: Must be a valid integer and belong to the authenticated user.
+    - `known`: Boolean - `true` if user knows the answer, `false` if they don't.
+  - **Response JSON**:
+    ```json
+    {
+      "success": true,
+      "next_review_date": "2026-01-15T10:00:00Z",
+      "interval_days": 3
+    }
+    ```
+  - **Business Logic**:
+    - **If `known = true`**: Increase interval (e.g., 1 day → 3 days → 7 days → 14 days → 30 days)
+    - **If `known = false`**: Reset to 1 day interval
+    - Update `next_review_date`, increment `review_count`, set `last_reviewed_at`
+    - Return information about when this flashcard will be due next
+  - **Errors**:
+    - 400 Bad Request for invalid known value or flashcard_id
+    - 401 Unauthorized if token is invalid
+    - 404 Not Found if flashcard doesn't exist or doesn't belong to user
+
+- **GET `/study/stats`**
+  - **Description**: Retrieve statistics about the user's study progress.
+  - **Response JSON**:
+    ```json
+    {
+      "total_flashcards": 120,
+      "due_today": 15,
+      "new_cards": 5,
+      "learned_cards": 100,
+      "mastered_cards": 45,
+      "retention_rate": 0.87
+    }
+    ```
+  - **Errors**:
+    - 401 Unauthorized if token is invalid
+
+### 2.5. Generation Error Logs
 
 *(Typically used internally or by admin users)*
 
@@ -148,4 +228,44 @@
 - **Mechanism**: Token-based authentication using Supabase Auth.
 - **Process**:
   - Users authenticate via `/auth/login` or `/auth/register`, receiving a bearer token.
+- **Protected Endpoints**: All endpoints except authentication endpoints require valid authentication:
+  - `/flashcards/*` - CRUD operations on flashcards
+  - `/generations/*` - AI flashcard generation
+  - `/study/*` - Study sessions and spaced repetition
+
+## 4. Study Session Flow Example
+
+This section illustrates a typical study session workflow:
+
+1. **User starts study session**:
+   - Frontend calls `GET /study/stats` to display overview (optional)
+   - Frontend calls `GET /study/next` to get the first flashcard
+
+2. **User reviews flashcard**:
+   - Frontend displays the front of the flashcard
+   - User clicks "Pokaż odpowiedź" (Show Answer) button
+   - Frontend displays the back of the flashcard
+
+3. **User rates their knowledge**:
+   - User selects one of two options:
+     - **"Znam"** (I know it) - `known: true`
+     - **"Nie znam"** (I don't know it) - `known: false`
+   - Frontend calls `POST /study/rate` with flashcard_id and known
+   - Backend updates review schedule and returns next review date
+
+4. **Continue or finish session**:
+   - Frontend calls `GET /study/next` to get the next flashcard
+   - If response is 204 No Content, display "Sesja ukończona!" message
+   - Otherwise, repeat steps 2-4
+
+**Simplified Algorithm Behavior**:
+- **New flashcard** (never reviewed): Shows immediately, `next_review_date` = null
+- **"Znam" (known: true)**: Interval increases progressively
+  - 1st review → next review in 1 day
+  - 2nd review → next review in 3 days
+  - 3rd review → next review in 7 days
+  - 4th review → next review in 14 days
+  - 5th+ review → next review in 30 days
+- **"Nie znam" (known: false)**: Interval resets to 1 day
+- Flashcards are due when `next_review_date` <= current date/time
 
