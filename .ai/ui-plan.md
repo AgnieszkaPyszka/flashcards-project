@@ -22,10 +22,17 @@ Interfejs użytkownika jest zbudowany wokół widoku generowania fiszek dostępn
 
 - **Widok listy fiszek (Moje fiszki)**
   - **Ścieżka:** `/flashcards`
-  - **Główny cel:** Przegląd, edycja oraz usuwanie zapisanych fiszek.
-  - **Kluczowe informacje:** Lista zapisanych fiszek z informacjami o pytaniu i odpowiedzi.
-  - **Kluczowe komponenty:** Lista elementów, komponent modal edycji, przyciski usuwania (potwierdzenie operacji).
-  - **UX, dostępność i względy bezpieczeństwa:** Czytelny układ listy, dostępność klawiaturowa modyfikacji, potwierdzenia usunięcia.
+  - **Główny cel:** Przegląd, tworzenie, edycja oraz usuwanie zapisanych fiszek.
+  - **Kluczowe informacje:** Lista zapisanych fiszek z informacjami o pytaniu i odpowiedzi, przycisk dodawania nowej fiszki.
+  - **Kluczowe komponenty:** Przycisk "Dodaj nową fiszkę", lista elementów, komponent modal tworzenia, komponent modal edycji, przyciski usuwania (potwierdzenie operacji).
+  - **UX, dostępność i względy bezpieczeństwa:** Czytelny układ listy, dostępność klawiaturowa modyfikacji, potwierdzenia usunięcia, intuicyjny dostęp do tworzenia nowych fiszek.
+
+- **Modal tworzenia nowej fiszki**
+  - **Ścieżka:** Wyświetlany nad widokiem listy fiszek
+  - **Główny cel:** Umożliwienie ręcznego utworzenia nowej fiszki z walidacją danych.
+  - **Kluczowe informacje:** Formularz tworzenia fiszki, pola "Przód" oraz "Tył", komunikaty walidacyjne.
+  - **Kluczowe komponenty:** Modal z formularzem, przyciski "Zapisz" i "Anuluj", walidacja długości (przód: max 200 znaków, tył: max 500 znaków).
+  - **UX, dostępność i względy bezpieczeństwa:** Intuicyjny modal, dostępność dla czytników ekranu, walidacja danych po stronie klienta przed wysłaniem, obsługa klawisza Escape do zamknięcia.
 
 - **Modal edycji fiszek**
   - **Ścieżka:** Wyświetlany nad widokiem listy fiszek
@@ -56,9 +63,11 @@ Interfejs użytkownika jest zbudowany wokół widoku generowania fiszek dostępn
 4. API zwraca propozycje fiszek, które są prezentowane na widoku generowania.
 5. Użytkownik przegląda propozycje i decyduje, które fiszki zaakceptować, edytować lub odrzucić (opcjonalne otwarcie modala edycji).
 6. Użytkownik zatwierdza wybrane fiszki i dokonuje zbiorczego zapisu poprzez interakcję z API.
-7. Następnie użytkownik przechodzi do widoku "Moje fiszki", gdzie może przeglądać, edytować lub usuwać fiszki.
-8. Użytkownik korzysta z nawigacji, aby odwiedzić panel użytkownika oraz opcjonalnie rozpocząć sesję powtórek.
-9. W przypadku błędów (np. walidacji, problemów z API) użytkownik otrzymuje komunikaty inline.
+7. Następnie użytkownik przechodzi do widoku "Moje fiszki", gdzie może przeglądać, tworzyć nowe, edytować lub usuwać fiszki.
+8. Użytkownik może ręcznie dodać nową fiszkę poprzez kliknięcie przycisku "Dodaj nową fiszkę", co otwiera modal z formularzem.
+9. Po wypełnieniu pól "Przód" i "Tył" i zatwierdzeniu, nowa fiszka jest zapisywana i pojawia się na liście.
+10. Użytkownik korzysta z nawigacji, aby odwiedzić panel użytkownika oraz opcjonalnie rozpocząć sesję powtórek.
+11. W przypadku błędów (np. walidacji, problemów z API) użytkownik otrzymuje komunikaty inline.
 
 ## 4. Układ i struktura nawigacji
 
@@ -71,8 +80,10 @@ Interfejs użytkownika jest zbudowany wokół widoku generowania fiszek dostępn
 
 - **Formularze uwierzytelnienia:** Komponenty logowania i rejestracji z obsługą walidacji.
 - **Komponent generowania fiszek:** Z polem tekstowym i przyciskiem uruchamiającym proces generacji, z wskaźnikiem ładowania.
-- **Lista fiszek:** Interaktywny komponent wyświetlający listę fiszek z opcjami edycji i usuwania.
+- **Lista fiszek:** Interaktywny komponent wyświetlający listę fiszek z opcjami dodawania, edycji i usuwania.
+- **Modal tworzenia nowej fiszki:** Komponent umożliwiający ręczne utworzenie nowej fiszki z polami "Przód" i "Tył", z walidacją długości (max 200 i 500 znaków).
 - **Modal edycji:** Komponent umożliwiający edycję fiszek z walidacją danych przed zatwierdzeniem.
+- **Modal potwierdzenia usunięcia:** Komponent wymagający potwierdzenia przed trwałym usunięciem fiszki.
 - **Toast notifications:** Komponent do wyświetlania komunikatów o sukcesach oraz błędach.
 - **Menu Nawigacji:** Elementy nawigacyjne ułatwiające przemieszczanie się między widokami.
 - **Komponent sesji powtórek:** Interaktywny układ wyświetlania fiszek podczas sesji nauki z mechanizmem oceny.

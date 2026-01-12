@@ -9,7 +9,7 @@ Widok będzie dostępny pod ścieżką: `/flashcards`.
 ## 3. Struktura komponentów
 - **FlashcardsList** – główny komponent wyświetlający listę fiszek pobranych z API.
   - **FlashcardListItem** – komponent reprezentujący pojedynczą fiszkę na liście, zawierający przycisk edycji.
-  - **EditFlashcardModal** – modal lub dedykowany komponent formularza, który otwiera się po kliknięciu na fiszkę. 
+  - **EditFlashcardModel** – modal lub dedykowany komponent formularza, który otwiera się po kliknięciu na fiszkę. 
 
 Diagram drzewa komponentów:
 

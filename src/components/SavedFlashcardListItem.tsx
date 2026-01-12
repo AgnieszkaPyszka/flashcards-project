@@ -1,13 +1,14 @@
 import { Button } from "@/components/ui/button";
-import { Edit2 } from "lucide-react";
+import { Edit2, Trash2 } from "lucide-react";
 import type { FlashcardDto } from "@/types";
 
 interface SavedFlashcardListItemProps {
   flashcard: FlashcardDto;
   onEdit: (flashcard: FlashcardDto) => void;
+  onDelete: (flashcard: FlashcardDto) => void;
 }
 
-export function SavedFlashcardListItem({ flashcard, onEdit }: SavedFlashcardListItemProps) {
+export function SavedFlashcardListItem({ flashcard, onEdit, onDelete }: SavedFlashcardListItemProps) {
   const getSourceLabel = (source: string) => {
     switch (source) {
       case "manual":
@@ -33,9 +34,20 @@ export function SavedFlashcardListItem({ flashcard, onEdit }: SavedFlashcardList
           </div>
         </div>
 
-        <Button size="icon" variant="outline" onClick={() => onEdit(flashcard)} aria-label="Edytuj fiszkę">
-          <Edit2 className="h-4 w-4" />
-        </Button>
+        <div className="flex gap-2">
+          <Button size="icon" variant="outline" onClick={() => onEdit(flashcard)} aria-label="Edytuj fiszkę">
+            <Edit2 className="h-4 w-4" />
+          </Button>
+          <Button
+            size="icon"
+            variant="outline"
+            onClick={() => onDelete(flashcard)}
+            aria-label="Usuń fiszkę"
+            className="hover:bg-destructive hover:text-destructive-foreground"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     </div>
   );

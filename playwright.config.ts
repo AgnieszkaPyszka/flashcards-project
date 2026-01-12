@@ -10,7 +10,7 @@ const __dirname = path.dirname(__filename);
 // Load environment variables from .env.test
 dotenv.config({ path: path.resolve(process.cwd(), ".env.test") });
 
-const BASE_URL = process.env.BASE_URL || "http://localhodt:3000"; // <-- domyślnie 3005, zmień jeśli chcesz 3000
+const BASE_URL = process.env.BASE_URL || "http://localhost:3000"; // <-- domyślnie 3000, zmień jeśli chcesz inny port
 
 export default defineConfig({
   testDir: "./tests/e2e",

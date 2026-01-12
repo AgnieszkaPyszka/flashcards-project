@@ -267,4 +267,65 @@ export class FlashcardService {
 
     return data as FlashcardDto;
   }
+
+  /**
+   * Deletes a flashcard
+   * @param flashcardId - The ID of the flashcard to delete
+   * @param userId - The ID of the user who owns the flashcard
+   * @throws {DatabaseError} When database operation fails or flashcard not found
+   */
+  async deleteFlashcard(flashcardId: number, userId: string): Promise<void> {
+    logger.warn("Deleting flashcard", {
+      flashcardId,
+      userId,
+    });
+
+    const { data, error } = await this.supabase
+      .from("flashcards")
+      .delete()
+      .eq("id", flashcardId)
+      .eq("user_id", userId)
+      .select("id")
+      .single();
+
+    if (error) {
+      // Check if it's a "not found" error (PGRST116)
+      if (error.code === "PGRST116") {
+        logger.error(new Error("Flashcard not found or user unauthorized"), {
+          flashcardId,
+          userId,
+        });
+        throw new DatabaseError(
+          "Flashcard not found or unauthorized",
+          "NOT_FOUND",
+          "The flashcard does not exist or you don't have permission to delete it"
+        );
+      }
+
+      logger.error(new Error("Failed to delete flashcard"), {
+        flashcardId,
+        userId,
+        errorCode: error.code,
+        errorMessage: error.message,
+      });
+      this.handleDatabaseError(error, "Failed to delete flashcard");
+    }
+
+    if (!data) {
+      logger.error(new Error("Flashcard not found or user unauthorized"), {
+        flashcardId,
+        userId,
+      });
+      throw new DatabaseError(
+        "Flashcard not found or unauthorized",
+        "NOT_FOUND",
+        "The flashcard does not exist or you don't have permission to delete it"
+      );
+    }
+
+    logger.warn("Flashcard deleted successfully", {
+      flashcardId,
+      userId,
+    });
+  }
 }

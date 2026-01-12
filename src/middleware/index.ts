@@ -52,6 +52,21 @@ export const onRequest = defineMiddleware(async (context, next) => {
     } = await supabase.auth.getSession();
 
     if (!session) {
+      // For API routes, return 401 JSON response instead of redirecting
+      if (context.url.pathname.startsWith("/api/")) {
+        return new Response(
+          JSON.stringify({
+            error: "Unauthorized",
+            details: "You must be logged in to access this resource",
+          }),
+          {
+            status: 401,
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      // For page routes, redirect to login
       return context.redirect("/login");
     }
   }

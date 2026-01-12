@@ -72,8 +72,6 @@ Endpoint ma za zadanie usuwanie fiszki (flashcard) na podstawie jej unikalnego i
    - Zwrócenie komunikatu o sukcesie lub odpowiedniego błędu (401, 404, 500).
 6. **Testowanie:**
    - Utworzenie testów jednostkowych i integracyjnych dla endpointu, uwzględniając scenariusze poprawne i błędne.
-7. **Przegląd i wdrożenie:**
-   - Code review oraz wdrożenie na środowisko testowe przed wdrożeniem na produkcję.
 
 **Referencje do zasad wdrożenia:** @shared.mdc, @backend.mdc, @astro.mdc
 
