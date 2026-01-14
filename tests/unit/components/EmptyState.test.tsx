@@ -13,9 +13,7 @@ describe("EmptyState", () => {
     it("should render the description message", () => {
       render(<EmptyState />);
 
-      expect(
-        screen.getByText("Nie masz jeszcze żadnych fiszek. Stwórz je, aby rozpocząć naukę.")
-      ).toBeInTheDocument();
+      expect(screen.getByText("Nie masz jeszcze żadnych fiszek. Stwórz je, aby rozpocząć naukę.")).toBeInTheDocument();
     });
 
     it("should render the icon", () => {

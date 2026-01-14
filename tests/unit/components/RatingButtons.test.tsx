@@ -16,10 +16,10 @@ describe("RatingButtons", () => {
 
       const buttons = screen.getAllByRole("button");
       expect(buttons).toHaveLength(2);
-      
-      const knowButton = buttons.find(btn => btn.getAttribute("aria-label") === "Znam tę fiszkę");
-      const dontKnowButton = buttons.find(btn => btn.getAttribute("aria-label") === "Nie znam tej fiszki");
-      
+
+      const knowButton = buttons.find((btn) => btn.getAttribute("aria-label") === "Znam tę fiszkę");
+      const dontKnowButton = buttons.find((btn) => btn.getAttribute("aria-label") === "Nie znam tej fiszki");
+
       expect(knowButton).toBeInTheDocument();
       expect(dontKnowButton).toBeInTheDocument();
     });
@@ -29,7 +29,7 @@ describe("RatingButtons", () => {
 
       const buttons = screen.getAllByRole("button");
       expect(buttons).toHaveLength(2);
-      
+
       // Check for SVG icons
       buttons.forEach((button) => {
         expect(button.querySelector("svg")).toBeInTheDocument();
@@ -67,8 +67,8 @@ describe("RatingButtons", () => {
       render(<RatingButtons flashcardId={1} onRate={mockOnRate} isRating={false} />);
 
       const buttons = screen.getAllByRole("button");
-      const knowButton = buttons.find(btn => btn.getAttribute("aria-label") === "Znam tę fiszkę");
-      
+      const knowButton = buttons.find((btn) => btn.getAttribute("aria-label") === "Znam tę fiszkę");
+
       expect(knowButton).toBeDefined();
       await user.click(knowButton!);
 
@@ -103,8 +103,8 @@ describe("RatingButtons", () => {
       render(<RatingButtons flashcardId={1} onRate={asyncOnRate} isRating={false} />);
 
       const buttons = screen.getAllByRole("button");
-      const knowButton = buttons.find(btn => btn.getAttribute("aria-label") === "Znam tę fiszkę");
-      
+      const knowButton = buttons.find((btn) => btn.getAttribute("aria-label") === "Znam tę fiszkę");
+
       expect(knowButton).toBeDefined();
       await user.click(knowButton!);
 
@@ -130,17 +130,15 @@ describe("RatingButtons", () => {
       render(<RatingButtons flashcardId={1} onRate={mockOnRate} isRating={false} />);
 
       const buttons = screen.getAllByRole("button");
-      const knowButton = buttons.find(btn => btn.getAttribute("aria-label") === "Znam tę fiszkę");
-      
+      const knowButton = buttons.find((btn) => btn.getAttribute("aria-label") === "Znam tę fiszkę");
+
       expect(knowButton).toBeInTheDocument();
       // Default variant should have bg-primary
       expect(knowButton?.className).toContain("bg-primary");
     });
 
     it("should have flex layout for responsive design", () => {
-      const { container } = render(
-        <RatingButtons flashcardId={1} onRate={mockOnRate} isRating={false} />
-      );
+      const { container } = render(<RatingButtons flashcardId={1} onRate={mockOnRate} isRating={false} />);
 
       const wrapper = container.firstChild as HTMLElement;
       expect(wrapper.className).toContain("flex");
@@ -161,16 +159,14 @@ describe("RatingButtons", () => {
       render(<RatingButtons flashcardId={1} onRate={mockOnRate} isRating={false} />);
 
       const buttons = screen.getAllByRole("button");
-      const knowButton = buttons.find(btn => btn.getAttribute("aria-label") === "Znam tę fiszkę");
-      
+      const knowButton = buttons.find((btn) => btn.getAttribute("aria-label") === "Znam tę fiszkę");
+
       expect(knowButton).toBeDefined();
       expect(knowButton).toHaveAttribute("aria-label", "Znam tę fiszkę");
     });
 
     it("should have aria-hidden on icons", () => {
-      const { container } = render(
-        <RatingButtons flashcardId={1} onRate={mockOnRate} isRating={false} />
-      );
+      const { container } = render(<RatingButtons flashcardId={1} onRate={mockOnRate} isRating={false} />);
 
       const icons = container.querySelectorAll("svg");
       icons.forEach((icon) => {
@@ -194,9 +190,7 @@ describe("RatingButtons", () => {
 
   describe("Edge cases", () => {
     it("should handle different flashcard IDs", () => {
-      const { rerender } = render(
-        <RatingButtons flashcardId={1} onRate={mockOnRate} isRating={false} />
-      );
+      const { rerender } = render(<RatingButtons flashcardId={1} onRate={mockOnRate} isRating={false} />);
 
       const buttons1 = screen.getAllByRole("button");
       expect(buttons1).toHaveLength(2);
@@ -212,8 +206,8 @@ describe("RatingButtons", () => {
       render(<RatingButtons flashcardId={1} onRate={mockOnRate} isRating={true} />);
 
       const buttons = screen.getAllByRole("button");
-      const knowButton = buttons.find(btn => btn.getAttribute("aria-label") === "Znam tę fiszkę");
-      
+      const knowButton = buttons.find((btn) => btn.getAttribute("aria-label") === "Znam tę fiszkę");
+
       expect(knowButton).toBeDisabled();
 
       // Should not have called onRate because button is disabled

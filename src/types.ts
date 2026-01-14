@@ -211,7 +211,7 @@ export interface FlashcardWithReviewData extends FlashcardDto {
 // ------------------------------------------------------------------------------------------------
 
 // Status of the study session - controls rendering logic
-export type SessionStatus = 'loading' | 'active' | 'empty' | 'complete' | 'error';
+export type SessionStatus = "loading" | "active" | "empty" | "complete" | "error";
 
 // State of a single card in the view
 export interface StudyCardState {

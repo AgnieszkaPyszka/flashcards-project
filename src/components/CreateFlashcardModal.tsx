@@ -50,9 +50,7 @@ export function CreateFlashcardModal({ isOpen, onClose, onSuccess }: CreateFlash
   // Handle cancel with confirmation if form has data
   const handleCancel = () => {
     if (formData.front || formData.back) {
-      const confirmed = window.confirm(
-        "Czy na pewno chcesz anulować? Wprowadzone dane zostaną utracone."
-      );
+      const confirmed = window.confirm("Czy na pewno chcesz anulować? Wprowadzone dane zostaną utracone.");
       if (!confirmed) return;
     }
 
@@ -81,7 +79,10 @@ export function CreateFlashcardModal({ isOpen, onClose, onSuccess }: CreateFlash
           {/* Front field */}
           <div className="space-y-2">
             <Label htmlFor="front">
-              Przód <span className="text-red-500" aria-label="wymagane">*</span>
+              Przód{" "}
+              <span className="text-red-500" aria-label="wymagane">
+                *
+              </span>
             </Label>
             <Input
               id="front"
@@ -108,9 +109,7 @@ export function CreateFlashcardModal({ isOpen, onClose, onSuccess }: CreateFlash
               </span>
               <span
                 id="front-counter"
-                className={
-                  formData.front.length > 200 ? "text-red-500" : "text-muted-foreground"
-                }
+                className={formData.front.length > 200 ? "text-red-500" : "text-muted-foreground"}
                 aria-label={`Liczba znaków: ${formData.front.length} z 200`}
               >
                 {formData.front.length}/200
@@ -121,7 +120,10 @@ export function CreateFlashcardModal({ isOpen, onClose, onSuccess }: CreateFlash
           {/* Back field */}
           <div className="space-y-2">
             <Label htmlFor="back">
-              Tył <span className="text-red-500" aria-label="wymagane">*</span>
+              Tył{" "}
+              <span className="text-red-500" aria-label="wymagane">
+                *
+              </span>
             </Label>
             <Textarea
               id="back"
@@ -164,12 +166,7 @@ export function CreateFlashcardModal({ isOpen, onClose, onSuccess }: CreateFlash
           )}
 
           <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleCancel}
-              disabled={isSubmitting}
-            >
+            <Button type="button" variant="outline" onClick={handleCancel} disabled={isSubmitting}>
               Anuluj
             </Button>
             <Button
@@ -192,4 +189,3 @@ export function CreateFlashcardModal({ isOpen, onClose, onSuccess }: CreateFlash
     </Dialog>
   );
 }
-

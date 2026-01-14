@@ -12,21 +12,17 @@ export function SessionComplete({ stats }: SessionCompleteProps) {
       <div className="rounded-full bg-green-100 p-6 dark:bg-green-900/20">
         <Trophy className="h-12 w-12 text-green-600 dark:text-green-400" aria-hidden="true" />
       </div>
-      
+
       <div className="space-y-2">
         <h2 className="text-2xl font-bold">Gratulacje! Sesja zakończona</h2>
-        <p className="text-muted-foreground">
-          Przejrzałeś wszystkie fiszki zaplanowane na dziś.
-        </p>
+        <p className="text-muted-foreground">Przejrzałeś wszystkie fiszki zaplanowane na dziś.</p>
       </div>
 
       {stats && (
         <div className="w-full rounded-lg border bg-card p-4">
           <p className="text-sm text-muted-foreground">
             W tej sesji przejrzałeś:{" "}
-            <span className="font-semibold text-foreground">
-              {stats.due_count + stats.new_count} fiszek
-            </span>
+            <span className="font-semibold text-foreground">{stats.due_count + stats.new_count} fiszek</span>
           </p>
         </div>
       )}

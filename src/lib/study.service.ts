@@ -1,10 +1,5 @@
 import type { SupabaseClient } from "../db/supabase.client";
-import type {
-  StudyFlashcardDto,
-  SessionStatsDto,
-  RateFlashcardResponseDto,
-  StudyStatsResponseDto,
-} from "../types";
+import type { StudyFlashcardDto, SessionStatsDto, RateFlashcardResponseDto, StudyStatsResponseDto } from "../types";
 import type { PostgrestError } from "@supabase/supabase-js";
 import { Logger } from "./logger";
 
@@ -122,11 +117,7 @@ export class StudyService {
    * @returns RateFlashcardResponseDto with next review date and interval
    * @throws {DatabaseError} When database operation fails or flashcard not found
    */
-  async rateFlashcard(
-    userId: string,
-    flashcardId: number,
-    known: boolean
-  ): Promise<RateFlashcardResponseDto> {
+  async rateFlashcard(userId: string, flashcardId: number, known: boolean): Promise<RateFlashcardResponseDto> {
     logger.warn("Rating flashcard", { userId, flashcardId, known });
 
     // First, verify the flashcard exists and belongs to the user

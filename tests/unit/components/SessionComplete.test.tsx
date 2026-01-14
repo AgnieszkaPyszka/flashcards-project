@@ -20,9 +20,7 @@ describe("SessionComplete", () => {
     it("should render completion message", () => {
       render(<SessionComplete />);
 
-      expect(
-        screen.getByText("Przejrzałeś wszystkie fiszki zaplanowane na dziś.")
-      ).toBeInTheDocument();
+      expect(screen.getByText("Przejrzałeś wszystkie fiszki zaplanowane na dziś.")).toBeInTheDocument();
     });
 
     it("should render trophy icon", () => {

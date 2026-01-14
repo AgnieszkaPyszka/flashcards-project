@@ -13,23 +13,18 @@ import { Button } from "./ui/button";
  * rating, and handling different session states.
  */
 export default function StudySessionContainer() {
-  const {
-    currentCard,
-    sessionStats,
-    isRevealed,
-    sessionStatus,
-    error,
-    isRating,
-    revealCard,
-    rateCard,
-    retryLoad,
-  } = useStudySession();
+  const { currentCard, sessionStats, isRevealed, sessionStatus, error, isRating, revealCard, rateCard, retryLoad } =
+    useStudySession();
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8">
       {/* Loading state */}
       {sessionStatus === "loading" && (
-        <div className="flex min-h-[400px] flex-col items-center justify-center space-y-4" role="status" aria-live="polite">
+        <div
+          className="flex min-h-[400px] flex-col items-center justify-center space-y-4"
+          role="status"
+          aria-live="polite"
+        >
           <Loader2 className="h-12 w-12 animate-spin text-primary" aria-hidden="true" />
           <p className="text-lg text-muted-foreground">Ładowanie fiszki...</p>
         </div>
@@ -39,20 +34,10 @@ export default function StudySessionContainer() {
       {sessionStatus === "active" && currentCard && (
         <div className="space-y-6">
           <SessionHeader stats={sessionStats} />
-          
-          <StudyCard
-            flashcard={currentCard}
-            isRevealed={isRevealed}
-            onReveal={revealCard}
-          />
 
-          {isRevealed && (
-            <RatingButtons
-              flashcardId={currentCard.id}
-              onRate={rateCard}
-              isRating={isRating}
-            />
-          )}
+          <StudyCard flashcard={currentCard} isRevealed={isRevealed} onReveal={revealCard} />
+
+          {isRevealed && <RatingButtons flashcardId={currentCard.id} onRate={rateCard} isRating={isRating} />}
         </div>
       )}
 
@@ -73,16 +58,18 @@ export default function StudySessionContainer() {
       {/* Error state */}
       {sessionStatus === "error" && (
         <div className="flex min-h-[400px] items-center justify-center">
-          <div className="mx-auto flex max-w-md flex-col items-center justify-center space-y-6 px-4 text-center" role="alert" aria-live="assertive">
+          <div
+            className="mx-auto flex max-w-md flex-col items-center justify-center space-y-6 px-4 text-center"
+            role="alert"
+            aria-live="assertive"
+          >
             <div className="rounded-full bg-destructive/10 p-6">
               <AlertCircle className="h-12 w-12 text-destructive" aria-hidden="true" />
             </div>
-            
+
             <div className="space-y-2">
               <h2 className="text-2xl font-bold">Wystąpił błąd</h2>
-              <p className="text-muted-foreground">
-                {error || "Nie udało się załadować fiszki. Spróbuj ponownie."}
-              </p>
+              <p className="text-muted-foreground">{error || "Nie udało się załadować fiszki. Spróbuj ponownie."}</p>
             </div>
 
             <Button onClick={retryLoad} size="lg" aria-label="Spróbuj ponownie załadować fiszkę">

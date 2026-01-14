@@ -15,7 +15,7 @@ export function StudyCard({ flashcard, isRevealed, onReveal }: StudyCardProps) {
           {isRevealed ? "Odpowiedź" : "Pytanie"}
         </span>
       </div>
-      
+
       <div className="max-h-[400px] min-h-[200px] overflow-y-auto whitespace-pre-wrap break-words text-base leading-relaxed sm:text-lg">
         {isRevealed ? flashcard.back : flashcard.front}
       </div>
