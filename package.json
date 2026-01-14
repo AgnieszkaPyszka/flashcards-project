@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "astro dev",
-    "dev:e2e": "astro dev --port 3000",
+    "dev:e2e": "dotenv -e .env.test -- astro dev --port 3000",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
@@ -44,6 +44,7 @@
   "devDependencies": {
     "@eslint/compat": "1.2.7",
     "@eslint/js": "9.23.0",
+    "@playwright/test": "^1.57.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
@@ -52,6 +53,7 @@
     "@vitest/coverage-v8": "^4.0.13",
     "@vitest/ui": "^4.0.13",
     "dotenv": "^17.2.3",
+    "dotenv-cli": "^11.0.0",
     "eslint": "9.23.0",
     "eslint-config-prettier": "10.1.1",
     "eslint-import-resolver-typescript": "4.2.5",
