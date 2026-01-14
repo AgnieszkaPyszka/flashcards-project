@@ -6,8 +6,8 @@ import { Logger } from "@/lib/logger";
 
 const logger = new Logger("auth/forgot-password");
 
-const supabaseUrl = import.meta.env.SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.SUPABASE_KEY;
+const supabaseUrl = process.env.SUPABASE_URL || import.meta.env.SUPABASE_URL;
+const supabaseAnonKey = process.env.SUPABASE_KEY || import.meta.env.SUPABASE_KEY;
 
 export const prerender = false;
 
@@ -69,7 +69,7 @@ export const POST: APIRoute = async ({ request }) => {
     // Note: Supabase will send the email even if the user doesn't exist (for security)
     // The redirect URL should point to your reset password page
     // Use localhost instead of 127.0.0.1 for better browser compatibility
-    const baseUrl = import.meta.env.SITE_URL || "http://localhost:3000";
+    const baseUrl = process.env.SITE_URL || import.meta.env.SITE_URL || "http://localhost:3000";
     const redirectUrl = `${baseUrl}/reset-password`;
 
     logger.warn("Sending password reset email", {
