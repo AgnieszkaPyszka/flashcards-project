@@ -106,9 +106,7 @@ describe("StudyCard", () => {
 
   describe("Styling", () => {
     it("should have correct styling classes", () => {
-      const { container } = render(
-        <StudyCard flashcard={mockFlashcard} isRevealed={false} onReveal={mockOnReveal} />
-      );
+      const { container } = render(<StudyCard flashcard={mockFlashcard} isRevealed={false} onReveal={mockOnReveal} />);
 
       const cardDiv = container.firstChild as HTMLElement;
       expect(cardDiv.className).toContain("rounded-lg");
@@ -118,9 +116,7 @@ describe("StudyCard", () => {
     });
 
     it("should have scrollable content area", () => {
-      const { container } = render(
-        <StudyCard flashcard={mockFlashcard} isRevealed={false} onReveal={mockOnReveal} />
-      );
+      const { container } = render(<StudyCard flashcard={mockFlashcard} isRevealed={false} onReveal={mockOnReveal} />);
 
       const contentDiv = container.querySelector(".overflow-y-auto");
       expect(contentDiv).toBeInTheDocument();

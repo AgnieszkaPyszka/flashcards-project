@@ -7,12 +7,10 @@ export function EmptyState() {
       <div className="rounded-full bg-muted p-6">
         <FileText className="h-12 w-12 text-muted-foreground" aria-hidden="true" />
       </div>
-      
+
       <div className="space-y-2">
         <h2 className="text-2xl font-bold">Brak fiszek do nauki</h2>
-        <p className="text-muted-foreground">
-          Nie masz jeszcze żadnych fiszek. Stwórz je, aby rozpocząć naukę.
-        </p>
+        <p className="text-muted-foreground">Nie masz jeszcze żadnych fiszek. Stwórz je, aby rozpocząć naukę.</p>
       </div>
 
       <div className="flex w-full flex-col gap-3 sm:flex-row">

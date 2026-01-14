@@ -150,7 +150,7 @@ test.describe("Flashcard Delete UI", () => {
 
     // Verify flashcard count decreased
     const newCount = await flashcardsPage.getFlashcardCount();
-    
+
     if (initialCount === 1) {
       // If it was the last flashcard, expect empty state
       await flashcardsPage.expectEmptyState();
@@ -181,7 +181,7 @@ test.describe("Flashcard Delete UI", () => {
     await page.waitForTimeout(1000);
 
     const initialCount = await flashcardsPage.getFlashcardCount();
-    
+
     if (initialCount === 0) {
       // Skip test if no flashcards
       test.skip();
@@ -214,7 +214,7 @@ test.describe("Flashcard Delete UI", () => {
     await page.waitForTimeout(1000);
 
     const initialCount = await flashcardsPage.getFlashcardCount();
-    
+
     if (initialCount === 0) {
       // Skip test if no flashcards
       test.skip();
@@ -235,4 +235,3 @@ test.describe("Flashcard Delete UI", () => {
     // It might disappear quickly
   });
 });
-

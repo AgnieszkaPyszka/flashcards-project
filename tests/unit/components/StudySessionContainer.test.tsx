@@ -116,9 +116,9 @@ describe("StudySessionContainer", () => {
       render(<StudySessionContainer />);
 
       const buttons = screen.getAllByRole("button");
-      const knowButton = buttons.find(btn => btn.getAttribute("aria-label") === "Znam tę fiszkę");
-      const dontKnowButton = buttons.find(btn => btn.getAttribute("aria-label") === "Nie znam tej fiszki");
-      
+      const knowButton = buttons.find((btn) => btn.getAttribute("aria-label") === "Znam tę fiszkę");
+      const dontKnowButton = buttons.find((btn) => btn.getAttribute("aria-label") === "Nie znam tej fiszki");
+
       expect(knowButton).toBeInTheDocument();
       expect(dontKnowButton).toBeInTheDocument();
     });
@@ -153,9 +153,9 @@ describe("StudySessionContainer", () => {
       render(<StudySessionContainer />);
 
       const buttons = screen.getAllByRole("button");
-      const knowButton = buttons.find(btn => btn.textContent?.includes("Znam"));
+      const knowButton = buttons.find((btn) => btn.textContent?.includes("Znam"));
       expect(knowButton).toBeDefined();
-      
+
       await user.click(knowButton!);
 
       expect(mockRateCard).toHaveBeenCalledWith(true);
@@ -179,9 +179,7 @@ describe("StudySessionContainer", () => {
       render(<StudySessionContainer />);
 
       expect(screen.getByText("Brak fiszek do nauki")).toBeInTheDocument();
-      expect(
-        screen.getByText("Nie masz jeszcze żadnych fiszek. Stwórz je, aby rozpocząć naukę.")
-      ).toBeInTheDocument();
+      expect(screen.getByText("Nie masz jeszcze żadnych fiszek. Stwórz je, aby rozpocząć naukę.")).toBeInTheDocument();
     });
 
     it("should show links to create flashcards", () => {
@@ -199,14 +197,8 @@ describe("StudySessionContainer", () => {
 
       render(<StudySessionContainer />);
 
-      expect(screen.getByRole("link", { name: /wygeneruj fiszki ai/i })).toHaveAttribute(
-        "href",
-        "/generate"
-      );
-      expect(screen.getByRole("link", { name: /utwórz ręcznie/i })).toHaveAttribute(
-        "href",
-        "/flashcards"
-      );
+      expect(screen.getByRole("link", { name: /wygeneruj fiszki ai/i })).toHaveAttribute("href", "/generate");
+      expect(screen.getByRole("link", { name: /utwórz ręcznie/i })).toHaveAttribute("href", "/flashcards");
     });
   });
 
@@ -231,9 +223,7 @@ describe("StudySessionContainer", () => {
       render(<StudySessionContainer />);
 
       expect(screen.getByText("Gratulacje! Sesja zakończona")).toBeInTheDocument();
-      expect(
-        screen.getByText("Przejrzałeś wszystkie fiszki zaplanowane na dziś.")
-      ).toBeInTheDocument();
+      expect(screen.getByText("Przejrzałeś wszystkie fiszki zaplanowane na dziś.")).toBeInTheDocument();
     });
 
     it("should pass stats to SessionComplete", () => {
@@ -294,9 +284,7 @@ describe("StudySessionContainer", () => {
 
       render(<StudySessionContainer />);
 
-      expect(
-        screen.getByText("Nie udało się załadować fiszki. Spróbuj ponownie.")
-      ).toBeInTheDocument();
+      expect(screen.getByText("Nie udało się załadować fiszki. Spróbuj ponownie.")).toBeInTheDocument();
     });
 
     it("should call retryLoad when retry button is clicked", async () => {

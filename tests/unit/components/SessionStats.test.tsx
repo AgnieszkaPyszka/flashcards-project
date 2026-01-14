@@ -102,9 +102,7 @@ describe("SessionStats", () => {
       expect(statItems).toHaveLength(3);
 
       // Check for color classes (orange, blue, green)
-      const iconContainers = Array.from(statItems).map((item) =>
-        item.querySelector("div[class*='text-']")
-      );
+      const iconContainers = Array.from(statItems).map((item) => item.querySelector("div[class*='text-']"));
 
       expect(iconContainers[0]?.className).toContain("text-orange-500");
       expect(iconContainers[1]?.className).toContain("text-blue-500");

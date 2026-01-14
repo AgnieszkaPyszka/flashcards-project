@@ -37,12 +37,7 @@ export function SessionStats({ stats }: SessionStatsProps) {
         value={stats.due_count}
         colorClass="text-orange-500"
       />
-      <StatItem
-        icon={<Plus className="h-6 w-6" />}
-        label="Nowe"
-        value={stats.new_count}
-        colorClass="text-blue-500"
-      />
+      <StatItem icon={<Plus className="h-6 w-6" />} label="Nowe" value={stats.new_count} colorClass="text-blue-500" />
       <StatItem
         icon={<CheckCircle className="h-6 w-6" />}
         label="Wyuczone"
