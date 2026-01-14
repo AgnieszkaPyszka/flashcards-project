@@ -19,6 +19,37 @@ test.describe("Flashcard Generation Flow", () => {
     const loremIpsum = generateLoremIpsum(2000);
     await generatePage.flashcardGeneration.enterText(loremIpsum);
 
+    // Mock API response to avoid real API calls
+    await page.route("/api/generations", async (route) => {
+      await route.fulfill({
+        status: 201,
+        contentType: "application/json",
+        body: JSON.stringify({
+          generation_id: "test-generation-id",
+          flashcards_proposals: [
+            {
+              id: "1",
+              question: "Test Question 1",
+              answer: "Test Answer 1",
+              status: "pending"
+            },
+            {
+              id: "2",
+              question: "Test Question 2",
+              answer: "Test Answer 2",
+              status: "pending"
+            },
+            {
+              id: "3",
+              question: "Test Question 3",
+              answer: "Test Answer 3",
+              status: "pending"
+            }
+          ]
+        })
+      });
+    });
+
     // 3. Generate flashcards
     await generatePage.flashcardGeneration.clickGenerate();
     await generatePage.flashcardGeneration.waitForGenerationToStart();
