@@ -11,7 +11,7 @@ Modal nie posiada własnej ścieżki routingu – jest wywoływany jako komponen
 ## 3. Struktura komponentów
 
 ```
-CreateFlashcardModal (główny komponent modala)
+CreateFlashcardModal (główny komponent modelu)
 ├── Dialog (z Shadcn/ui)
 │   ├── DialogContent
 │   │   ├── DialogHeader
