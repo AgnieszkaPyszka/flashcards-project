@@ -118,12 +118,15 @@ export function useCreateFlashcard() {
   }, []);
 
   // Validate field on blur - memoized to prevent infinite loops
-  const validateOnBlur = useCallback((field: "front" | "back") => {
-    const error = validateField(field, formData[field]);
-    if (error) {
-      setValidationErrors((prev) => ({ ...prev, [field]: error }));
-    }
-  }, [formData]);
+  const validateOnBlur = useCallback(
+    (field: "front" | "back") => {
+      const error = validateField(field, formData[field]);
+      if (error) {
+        setValidationErrors((prev) => ({ ...prev, [field]: error }));
+      }
+    },
+    [formData]
+  );
 
   // Check if form is valid (for enabling/disabling submit button)
   const isFormValid = useCallback((): boolean => {
