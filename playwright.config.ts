@@ -8,16 +8,18 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Load environment variables from .env.test if it exists
+import fs from "fs";
+
 try {
   const envPath = path.resolve(process.cwd(), ".env.test");
-  if (require('fs').existsSync(envPath)) {
+  if (fs.existsSync(envPath)) {
     dotenv.config({ path: envPath });
-    console.log("Loaded environment variables from .env.test");
+    // Environment variables loaded from .env.test
   } else {
-    console.log(".env.test file not found, using process.env variables");
+    // Using process.env variables
   }
-} catch (error) {
-  console.error("Error loading .env.test:", error);
+} catch {
+  // Error loading .env.test
 }
 
 const BASE_URL = process.env.BASE_URL || "http://localhost:3000"; // <-- domyślnie 3000, zmień jeśli chcesz inny port
