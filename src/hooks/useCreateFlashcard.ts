@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import type {
   CreateFlashcardFormData,
   CreateFlashcardValidationErrors,
@@ -97,33 +97,36 @@ export function useCreateFlashcard() {
     }
   };
 
-  // Reset form
-  const reset = () => {
+  // Reset form - memoized to prevent infinite loops
+  const reset = useCallback(() => {
     setFormData({ front: "", back: "" });
     setValidationErrors({});
     setApiError(null);
-  };
+  }, []);
 
-  // Update field value
-  const updateField = (field: "front" | "back", value: string) => {
+  // Update field value - memoized to prevent infinite loops
+  const updateField = useCallback((field: "front" | "back", value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
 
     // Clear error for this field when user starts typing
-    if (validationErrors[field]) {
-      setValidationErrors((prev) => ({ ...prev, [field]: undefined }));
-    }
-  };
+    setValidationErrors((prev) => {
+      if (prev[field]) {
+        return { ...prev, [field]: undefined };
+      }
+      return prev;
+    });
+  }, []);
 
-  // Validate field on blur
-  const validateOnBlur = (field: "front" | "back") => {
+  // Validate field on blur - memoized to prevent infinite loops
+  const validateOnBlur = useCallback((field: "front" | "back") => {
     const error = validateField(field, formData[field]);
     if (error) {
       setValidationErrors((prev) => ({ ...prev, [field]: error }));
     }
-  };
+  }, [formData]);
 
   // Check if form is valid (for enabling/disabling submit button)
-  const isFormValid = (): boolean => {
+  const isFormValid = useCallback((): boolean => {
     return (
       formData.front.trim().length > 0 &&
       formData.front.length <= 200 &&
@@ -131,7 +134,7 @@ export function useCreateFlashcard() {
       formData.back.length <= 500 &&
       Object.values(validationErrors).every((error) => !error)
     );
-  };
+  }, [formData, validationErrors]);
 
   return {
     formData,

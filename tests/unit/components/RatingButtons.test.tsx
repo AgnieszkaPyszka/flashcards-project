@@ -70,7 +70,9 @@ describe("RatingButtons", () => {
       const knowButton = buttons.find((btn) => btn.getAttribute("aria-label") === "Znam tę fiszkę");
 
       expect(knowButton).toBeDefined();
-      await user.click(knowButton!);
+      if (knowButton) {
+        await user.click(knowButton);
+      }
 
       expect(mockOnRate).toHaveBeenCalledTimes(1);
       expect(mockOnRate).toHaveBeenCalledWith(true);
@@ -106,7 +108,9 @@ describe("RatingButtons", () => {
       const knowButton = buttons.find((btn) => btn.getAttribute("aria-label") === "Znam tę fiszkę");
 
       expect(knowButton).toBeDefined();
-      await user.click(knowButton!);
+      if (knowButton) {
+        await user.click(knowButton);
+      }
 
       expect(asyncOnRate).toHaveBeenCalledTimes(1);
       expect(asyncOnRate).toHaveBeenCalledWith(true);
@@ -202,7 +206,6 @@ describe("RatingButtons", () => {
     });
 
     it("should handle rapid clicks gracefully when disabled", async () => {
-      const user = userEvent.setup();
       render(<RatingButtons flashcardId={1} onRate={mockOnRate} isRating={true} />);
 
       const buttons = screen.getAllByRole("button");

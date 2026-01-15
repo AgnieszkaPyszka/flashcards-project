@@ -2,7 +2,7 @@ import type { APIRoute } from "astro";
 
 export const prerender = false;
 
-export const POST: APIRoute = async ({ cookies, locals, redirect }) => {
+export const POST: APIRoute = async ({ cookies, locals }) => {
   try {
     const supabase = locals.supabase;
 
@@ -10,6 +10,7 @@ export const POST: APIRoute = async ({ cookies, locals, redirect }) => {
     const { error } = await supabase.auth.signOut();
 
     if (error) {
+      // eslint-disable-next-line no-console
       console.error("Logout error:", error);
       return new Response(
         JSON.stringify({
@@ -42,6 +43,7 @@ export const POST: APIRoute = async ({ cookies, locals, redirect }) => {
       }
     );
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error("Unexpected logout error:", error);
     return new Response(
       JSON.stringify({

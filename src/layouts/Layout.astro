@@ -25,6 +25,7 @@ try {
     userEmail = session.user.email;
   }
 } catch (error) {
+  // eslint-disable-next-line no-console
   console.error("Error checking authentication state:", error);
 }
 ---

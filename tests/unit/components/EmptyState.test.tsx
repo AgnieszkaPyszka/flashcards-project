@@ -133,7 +133,7 @@ describe("EmptyState", () => {
 
   describe("Button styling", () => {
     it("should style generate button as primary", () => {
-      const { container } = render(<EmptyState />);
+      render(<EmptyState />);
 
       const generateButton = screen.getByRole("link", { name: /wygeneruj fiszki ai/i });
       // Primary button should have bg-primary
@@ -148,7 +148,7 @@ describe("EmptyState", () => {
     });
 
     it("should render sparkles icon in generate button", () => {
-      const { container } = render(<EmptyState />);
+      render(<EmptyState />);
 
       const generateButton = screen.getByRole("link", { name: /wygeneruj fiszki ai/i });
       const icon = generateButton.querySelector("svg");

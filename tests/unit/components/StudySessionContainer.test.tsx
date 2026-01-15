@@ -1,8 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import StudySessionContainer from "@/components/StudySessionContainer";
-import type { StudyNextResponseDto } from "@/types";
 
 // Mock the useStudySession hook
 vi.mock("@/hooks/useStudySession", () => ({
@@ -156,7 +155,9 @@ describe("StudySessionContainer", () => {
       const knowButton = buttons.find((btn) => btn.textContent?.includes("Znam"));
       expect(knowButton).toBeDefined();
 
-      await user.click(knowButton!);
+      if (knowButton) {
+        await user.click(knowButton);
+      }
 
       expect(mockRateCard).toHaveBeenCalledWith(true);
     });

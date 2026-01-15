@@ -1,10 +1,9 @@
+/* eslint-disable no-undef */
+/* eslint-disable no-console */
 import { chromium } from "@playwright/test";
 import dotenv from "dotenv";
 import path from "path";
-import { fileURLToPath } from "url";
 import fs from "fs";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Załaduj zmienne środowiskowe z .env.test
 dotenv.config({ path: path.resolve(process.cwd(), ".env.test") });
