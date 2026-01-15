@@ -43,6 +43,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
       keyLength: apiKey?.length || 0,
       keyPrefix: apiKey?.substring(0, 10) || "NONE",
     });
+
     if (!apiKey) {
       return new Response(
         JSON.stringify({
