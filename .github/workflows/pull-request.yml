@@ -88,16 +88,27 @@ jobs:
       
       - name: Create .env.test file
         run: |
-          echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" > .env.test
-          echo "SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}" >> .env.test
-          echo "OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}" >> .env.test
-          echo "E2E_USERNAME_ID=${{ secrets.E2E_USERNAME_ID }}" >> .env.test
-          echo "E2E_USERNAME=${{ secrets.E2E_USERNAME }}" >> .env.test
-          echo "E2E_PASSWORD=${{ secrets.E2E_PASSWORD }}" >> .env.test
-          echo "BASE_URL=http://localhost:3000" >> .env.test
+          cat > .env.test << EOF
+          SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}
+          OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}
+          E2E_USERNAME_ID=${{ secrets.E2E_USERNAME_ID }}
+          E2E_USERNAME=${{ secrets.E2E_USERNAME }}
+          E2E_PASSWORD=${{ secrets.E2E_PASSWORD }}
+          BASE_URL=http://localhost:3000
+          EOF
+          cat .env.test
       
       - name: Run E2E tests
         run: npm run test:e2e
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          E2E_USERNAME_ID: ${{ secrets.E2E_USERNAME_ID }}
+          E2E_USERNAME: ${{ secrets.E2E_USERNAME }}
+          E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+          BASE_URL: http://localhost:3000
       
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
