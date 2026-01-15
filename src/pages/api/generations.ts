@@ -35,15 +35,14 @@ export const POST: APIRoute = async ({ request, locals }) => {
     // Initialize service and generate flashcards
     // In server endpoints, we need to use process.env
     const apiKey = import.meta.env.OPENROUTER_API_KEY || process.env.OPENROUTER_API_KEY;
-    
+
     // eslint-disable-next-line no-console
     console.log("API Key check:", {
       hasImportMetaKey: !!import.meta.env.OPENROUTER_API_KEY,
       hasProcessEnvKey: !!process.env.OPENROUTER_API_KEY,
       keyLength: apiKey?.length || 0,
-      keyPrefix: apiKey?.substring(0, 10) || "NONE"
+      keyPrefix: apiKey?.substring(0, 10) || "NONE",
     });
-    
     if (!apiKey) {
       return new Response(
         JSON.stringify({
