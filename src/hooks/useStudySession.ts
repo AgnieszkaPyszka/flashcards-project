@@ -6,7 +6,6 @@ import type {
   UseStudySessionReturn,
   StudyNextResponseDto,
   RateFlashcardCommand,
-  RateFlashcardResponseDto,
 } from "@/types";
 
 /**
@@ -135,9 +134,8 @@ export function useStudySession(): UseStudySessionReturn {
         throw new Error(errorData.details || "Błąd podczas oceniania fiszki");
       }
 
-      const data: RateFlashcardResponseDto = await response.json();
-
       // Optional: Show toast notification with next review date
+      // const data: RateFlashcardResponseDto = await response.json();
       // toast.success(`Następna powtórka za ${data.interval_days} dni`);
 
       // Load next flashcard

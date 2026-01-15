@@ -230,7 +230,7 @@ test.describe("Flashcard Delete UI", () => {
 
     // Check for loading state (button should show "Usuwanie...")
     // Note: This might be very fast in local environment
-    const loadingText = page.getByText("Usuwanie...");
+    // const loadingText = page.getByText("Usuwanie...");
     // Just check if the element exists at some point
     // It might disappear quickly
   });

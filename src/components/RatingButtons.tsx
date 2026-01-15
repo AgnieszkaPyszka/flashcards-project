@@ -2,12 +2,11 @@ import { X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface RatingButtonsProps {
-  flashcardId: number;
   onRate: (known: boolean) => Promise<void>;
   isRating: boolean;
 }
 
-export function RatingButtons({ flashcardId, onRate, isRating }: RatingButtonsProps) {
+export function RatingButtons({ onRate, isRating }: RatingButtonsProps) {
   return (
     <div className="mx-auto mt-6 flex w-full max-w-2xl flex-col gap-4 sm:flex-row">
       <Button

@@ -33,8 +33,32 @@ export const POST: APIRoute = async ({ request, locals }) => {
     }
 
     // Initialize service and generate flashcards
+    // In server endpoints, we need to use process.env
+    const apiKey = import.meta.env.OPENROUTER_API_KEY || process.env.OPENROUTER_API_KEY;
+    
+    // eslint-disable-next-line no-console
+    console.log("API Key check:", {
+      hasImportMetaKey: !!import.meta.env.OPENROUTER_API_KEY,
+      hasProcessEnvKey: !!process.env.OPENROUTER_API_KEY,
+      keyLength: apiKey?.length || 0,
+      keyPrefix: apiKey?.substring(0, 10) || "NONE"
+    });
+    
+    if (!apiKey) {
+      return new Response(
+        JSON.stringify({
+          error: "Configuration error",
+          details: "OpenRouter API key is not configured",
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
     const generationService = new GenerationService(locals.supabase, {
-      apiKey: process.env.OPENROUTER_API_KEY || import.meta.env.OPENROUTER_API_KEY,
+      apiKey,
     });
     const result = await generationService.generateFlashcards(body.source_text);
 
@@ -43,6 +67,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error("Error processing generation request:", error);
     return new Response(JSON.stringify({ error: "Internal server error", details: (error as Error).message }), {
       status: 500,

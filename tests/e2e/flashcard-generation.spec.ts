@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test } from "@playwright/test";
 import { LoginPage } from "./models/LoginPage";
 import { GeneratePage } from "./models/GeneratePage";
 

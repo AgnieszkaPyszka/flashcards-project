@@ -33,7 +33,7 @@ export function CreateFlashcardModal({ isOpen, onClose, onSuccess }: CreateFlash
     if (isOpen) {
       reset();
     }
-  }, [isOpen]);
+  }, [isOpen, reset]);
 
   // Handle form submission
   const onSubmit = async (e: React.FormEvent) => {
@@ -93,7 +93,6 @@ export function CreateFlashcardModal({ isOpen, onClose, onSuccess }: CreateFlash
               placeholder="Wpisz pytanie lub termin"
               className={validationErrors.front ? "border-red-500" : ""}
               disabled={isSubmitting}
-              autoFocus
               aria-invalid={!!validationErrors.front}
               aria-describedby={validationErrors.front ? "front-error" : "front-counter"}
               required

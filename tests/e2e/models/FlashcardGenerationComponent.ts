@@ -26,7 +26,9 @@ export class FlashcardGenerationComponent {
     await this.generateButton.click();
   }
 
-  async waitForGenerationToStart() {}
+  async waitForGenerationToStart() {
+    // Placeholder for future implementation
+  }
 
   async waitForGenerationToComplete() {
     // Wait for the skeleton loader to disappear

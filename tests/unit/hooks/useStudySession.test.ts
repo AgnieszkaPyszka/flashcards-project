@@ -9,6 +9,7 @@ global.fetch = mockFetch;
 
 // Mock window.location
 const originalLocation = window.location;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 delete (window as any).location;
 window.location = { ...originalLocation, href: "" } as Location;
 
@@ -25,6 +26,7 @@ describe("useStudySession", () => {
 
   describe("Initial load", () => {
     it("should start with loading status", () => {
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
       mockFetch.mockImplementation(() => new Promise(() => {})); // Never resolve
 
       const { result } = renderHook(() => useStudySession());
@@ -107,7 +109,7 @@ describe("useStudySession", () => {
         json: async () => ({ error: "Unauthorized" }),
       });
 
-      const { result } = renderHook(() => useStudySession());
+      renderHook(() => useStudySession());
 
       await waitFor(() => {
         expect(window.location.href).toBe("/login");
