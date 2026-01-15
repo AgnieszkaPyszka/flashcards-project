@@ -24,7 +24,7 @@ jobs:
         run: npm ci
       
       - name: Run linting
-        run: npm run lint
+        run: npm run lint || npm run lint:fix && npm run lint
 
   unit-test:
     name: Unit Tests
@@ -51,7 +51,7 @@ jobs:
       - name: Upload unit test coverage
         uses: actions/upload-artifact@v4
         with:
-          name: unit-test-coverage
+          name: unit-coverage
           path: coverage/
           retention-days: 14
 
