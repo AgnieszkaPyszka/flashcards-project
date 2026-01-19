@@ -93,8 +93,8 @@ jobs:
           set -euo pipefail
           umask 077
           cat > .env.test << EOF
-          SUPABASE_URL=$SUPABASE_URL
-          SUPABASE_KEY=$SUPABASE_KEY
+          PUBLIC_SUPABASE_URL=$SUPABASE_URL
+          PUBLIC_SUPABASE_KEY=$SUPABASE_KEY
           OPENROUTER_API_KEY=$OPENROUTER_API_KEY
           E2E_USERNAME_ID=$E2E_USERNAME_ID
           E2E_USERNAME=$E2E_USERNAME
@@ -105,8 +105,8 @@ jobs:
       - name: Run E2E tests
         run: npm run test:e2e
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          PUBLIC_SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           E2E_USERNAME_ID: ${{ secrets.E2E_USERNAME_ID }}
           E2E_USERNAME: ${{ secrets.E2E_USERNAME }}

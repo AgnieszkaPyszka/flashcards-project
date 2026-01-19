@@ -54,8 +54,8 @@ export default defineConfig({
     timeout: 120_000,
     cwd: path.resolve(__dirname),
     env: {
-      SUPABASE_URL: process.env.SUPABASE_URL,
-      SUPABASE_KEY: process.env.SUPABASE_KEY,
+      PUBLIC_SUPABASE_URL: process.env.SUPABASE_URL,
+      PUBLIC_SUPABASE_KEY: process.env.SUPABASE_KEY,
       OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY,
       E2E_USERNAME_ID: process.env.E2E_USERNAME_ID,
       E2E_USERNAME: process.env.E2E_USERNAME,
