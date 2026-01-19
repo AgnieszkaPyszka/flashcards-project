@@ -28,7 +28,7 @@ console.log(`Używam danych logowania: ${TEST_USER_EMAIL} / ${TEST_USER_PASSWORD
 
   try {
     console.log("Przechodzę do strony logowania...");
-    await page.goto("http://localhodt:3000/login");
+    await page.goto("http://localhost:3000/login");
 
     console.log("Wypełniam formularz logowania...");
     await page.fill('input[type="email"]', TEST_USER_EMAIL);
@@ -68,7 +68,7 @@ console.log(`Używam danych logowania: ${TEST_USER_EMAIL} / ${TEST_USER_PASSWORD
     } else if (currentUrl.includes("/register")) {
       console.log("Przekierowanie na stronę rejestracji. To może być poprawne zachowanie dla nowego użytkownika.");
       // Możemy tutaj dodać nawigację do strony /generate, aby upewnić się, że jesteśmy zalogowani
-      await page.goto("http://localhodt:3000/generate");
+      await page.goto("http://localhost:3000/generate");
       await page.waitForTimeout(2000); // Poczekaj 2 sekundy
     }
 
