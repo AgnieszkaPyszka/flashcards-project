@@ -2,10 +2,13 @@ import { defineMiddleware } from "astro:middleware";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "../db/database.types";
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_KEY;
+const supabaseUrl = import.meta.env.SUPABASE_URL || process.env.SUPABASE_URL;
+
+const supabaseAnonKey = import.meta.env.SUPABASE_KEY || process.env.SUPABASE_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
+  console.error("SUPABASE_URL (meta):", import.meta.env.SUPABASE_URL);
+  console.error("SUPABASE_URL (process):", process.env.SUPABASE_URL);
   throw new Error("Supabase env not set");
 }
 
