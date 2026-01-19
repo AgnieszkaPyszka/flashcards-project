@@ -84,8 +84,6 @@ export function LoginForm() {
         throw new Error(errorData.message || "Login failed. Please check your credentials.");
       }
 
-      // Success - perform server-side reload by redirecting to home page
-      // Cookies are set by the backend, so a full page reload will authenticate the user
       window.location.href = "/";
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "An unexpected error occurred");
