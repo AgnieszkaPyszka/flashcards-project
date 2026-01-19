@@ -49,9 +49,19 @@ export default defineConfig({
 
   webServer: {
     command: "npm run dev:e2e",
-    url: BASE_URL, // use env-driven URL
+    url: BASE_URL,
     reuseExistingServer: process.env.CI ? false : true,
-    timeout: 120_000, // 2 minuty na start
+    timeout: 120_000,
     cwd: path.resolve(__dirname),
+    env: {
+      SUPABASE_URL: process.env.SUPABASE_URL,
+      SUPABASE_KEY: process.env.SUPABASE_KEY,
+      OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY,
+      E2E_USERNAME_ID: process.env.E2E_USERNAME_ID,
+      E2E_USERNAME: process.env.E2E_USERNAME,
+      E2E_PASSWORD: process.env.E2E_PASSWORD,
+      NODE_ENV: "integration",
+      BASE_URL: BASE_URL,
+    },
   },
 });
