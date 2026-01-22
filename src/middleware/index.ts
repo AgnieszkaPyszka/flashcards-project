@@ -2,8 +2,12 @@ import { defineMiddleware } from "astro:middleware";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "../db/database.types";
 
-const supabaseUrl = process.env.SUPABASE_URL || import.meta.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_KEY || import.meta.env.SUPABASE_KEY;
+const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error("Supabase env not set");
+}
 
 // Public routes that don't require authentication
 const PUBLIC_ROUTES = ["/login", "/register", "/forgot-password", "/reset-password"];

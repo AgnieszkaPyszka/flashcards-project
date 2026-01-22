@@ -61,8 +61,8 @@ Follow these steps to run the project on your local machine:
 Create a `.env` file in the root directory with the following variables:
 
 ```
-SUPABASE_URL=your_supabase_url
-SUPABASE_KEY=your_supabase_anon_key
+PUBLIC_SUPABASE_URL=your_supabase_url
+PUBLIC_SUPABASE_KEY=your_supabase_anon_key
 OPENROUTER_API_KEY=your_openrouter_api_key
 ```
 
@@ -72,8 +72,8 @@ For E2E tests with Playwright, create a `.env.test` file in the root directory:
 
 ```
 TEST_BASE_URL=http://localhost:3000
-SUPABASE_URL=your_test_supabase_url
-SUPABASE_KEY=your_test_supabase_key
+PUBLIC_SUPABASE_URL=your_test_supabase_url
+PUBLIC_SUPABASE_KEY=your_test_supabase_key
 ```
 
 The Playwright configuration is set up to automatically load variables from this file.
