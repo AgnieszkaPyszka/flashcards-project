@@ -51,8 +51,9 @@ jobs:
         run: npm run build
         env:
           PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
-          PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
+          PUBLIC_SUPABASE_KEY: ${{ secrets.PUBLIC_SUPABASE_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          SUPABASE_ACESS_TOKEN: ${{ secrets.SUPABASE_ACESS_TOKEN }}
       
       - name: Upload build artifact
         uses: actions/upload-artifact@v6
@@ -76,7 +77,12 @@ jobs:
       
       - name: Publish to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
+        env:
+          PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_KEY: ${{ secrets.PUBLIC_SUPABASE_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          SUPABASE_ACESS_TOKEN: ${{ secrets.SUPABASE_ACESS_TOKEN }}
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=flashcards-project
+          command: pages deploy dist --project-name=flashcards-project --env production
