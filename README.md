@@ -12,7 +12,7 @@ Flashcard-project is a flashcards web application designed to simplify study pro
 - **Testing:** 
   - **Unit & Integration:** Vitest, React Testing Library
   - **End-to-End:** Playwright
-- **CI/CD & Hosting:** GitHub Actions for CI/CD pipelines and DigitalOcean (Docker) for hosting
+- **CI/CD & Hosting:** GitHub Actions for CI/CD pipelines and Cloudflare Pages for hosting.
 
 ## Getting Started Locally
 
@@ -97,6 +97,14 @@ The following npm scripts are available in this project:
 - **`npm run test:e2e:ui`**: Opens the Playwright UI for interactive E2E testing.
 
 ## Project Scope
+
+## Deployments & Releases
+
+The application is hosted on Cloudflare Pages. The deployment strategy is based on a CI/CD pipeline using GitHub Actions, which automatically builds and deploys the application upon pushes to the main branch.
+
+For a detailed analysis of the hosting choice and strategy, see the [Hosting Strategy Document](/.ai/deployments.md).
+
+## Project Status
 
 The project scope includes the following features:
 
