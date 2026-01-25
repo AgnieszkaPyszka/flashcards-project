@@ -13,12 +13,10 @@ const { title = "10x Astro Starter", showHeader = true } = Astro.props;
 let userEmail: string | null = null;
 if (showHeader) {
   try {
-    if (Astro.locals.supabase) {
-      const {
-        data: { session },
-      } = await Astro.locals.supabase.auth.getSession();
-      userEmail = session?.user?.email ?? null;
-    }
+    const {
+      data: { session },
+    } = await Astro.locals.supabase?.auth.getSession();
+    userEmail = session?.user?.email ?? null;
   } catch {
     userEmail = null;
   }
