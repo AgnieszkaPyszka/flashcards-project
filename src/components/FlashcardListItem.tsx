@@ -44,7 +44,7 @@ export function FlashcardListItem({
       data-testid={dataTestId}
       className={cn(
         "border rounded-lg p-4 space-y-3 transition-colors h-full",
-        flashcard.status === "accepted" && "bg-green-50/50 border-green-200",
+        flashcard.status === "accepted" && "bg-green-50 border-green-200",
         flashcard.status === "rejected" && "bg-red-50/50 border-red-200 opacity-70",
         flashcard.status === "pending" && "bg-white"
       )}
@@ -128,7 +128,7 @@ export function FlashcardListItem({
         </div>
       </div>
 
-      {flashcard.edited && <div className="text-sm text-muted-foreground">Edytowana</div>}
+      {flashcard.edited && <div className="text-sm text-muted-foreground">Edited</div>}
     </div>
   );
 }

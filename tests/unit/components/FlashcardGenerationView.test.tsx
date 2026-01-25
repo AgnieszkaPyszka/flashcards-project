@@ -181,7 +181,7 @@ describe("FlashcardGenerationView", () => {
     });
 
     // Initially the Save Accepted button should be disabled (no accepted flashcards)
-    expect(screen.getByText("Save Accepted")).toBeDisabled();
+    expect(screen.getByTestId("save-accepted-flashcards-button")).toBeDisabled();
 
     // Get all accept buttons (should be 2)
     const acceptButtons = screen
@@ -193,7 +193,7 @@ describe("FlashcardGenerationView", () => {
     await userEvent.click(acceptButtons[0]);
 
     // Now the Save Accepted button should be enabled
-    expect(screen.getByText("Save Accepted")).not.toBeDisabled();
+    expect(screen.getByTestId("save-accepted-flashcards-button")).not.toBeDisabled();
 
     // Get all reject buttons
     const rejectButtons = screen
@@ -204,7 +204,7 @@ describe("FlashcardGenerationView", () => {
     await userEvent.click(rejectButtons[0]);
 
     // Save Accepted should be disabled again
-    expect(screen.getByText("Save Accepted")).toBeDisabled();
+    expect(screen.getByTestId("save-accepted-flashcards-button")).toBeDisabled();
   });
 
   it("allows accepting flashcards", async () => {
@@ -233,7 +233,7 @@ describe("FlashcardGenerationView", () => {
     expect(screen.getByText("Answer 1")).toBeInTheDocument();
 
     // Test that the Save Accepted button is initially disabled
-    expect(screen.getByText("Save Accepted")).toBeDisabled();
+    expect(screen.getByTestId("save-accepted-flashcards-button")).toBeDisabled();
   });
 
   it("validates text input length constraints", async () => {

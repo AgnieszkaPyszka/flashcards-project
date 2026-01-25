@@ -6,10 +6,11 @@ import type { FlashcardProposalViewModel } from "@/components/FlashcardGeneratio
 
 describe("FlashcardListItem", () => {
   const mockFlashcard: FlashcardProposalViewModel = {
+    id: "test-id",
     front: "Test Question",
     back: "Test Answer",
     source: "ai-full",
-    accepted: false,
+    status: "pending",
     edited: false,
   };
 
@@ -34,7 +35,7 @@ describe("FlashcardListItem", () => {
   });
 
   it("applies different styling when flashcard is accepted", () => {
-    const acceptedFlashcard = { ...mockFlashcard, accepted: true };
+    const acceptedFlashcard = { ...mockFlashcard, status: "accepted" };
 
     const { container } = render(
       <FlashcardListItem
@@ -226,11 +227,7 @@ describe("FlashcardListItem", () => {
     // Wait for the character count to update
     await waitFor(() => {
       // Use a function matcher to find the text with the character count
-      expect(
-        screen.getByText((content) => {
-          return content.includes("201") && content.includes("200") && content.includes("characters");
-        })
-      ).toBeInTheDocument();
+      expect(screen.getByText("201/200")).toBeInTheDocument();
     });
 
     // Save button should be disabled
@@ -244,11 +241,7 @@ describe("FlashcardListItem", () => {
     // Wait for the character count to update
     await waitFor(() => {
       // Use a function matcher to find the text with the character count
-      expect(
-        screen.getByText((content) => {
-          return content.includes("501") && content.includes("500") && content.includes("characters");
-        })
-      ).toBeInTheDocument();
+      expect(screen.getByText("501/500")).toBeInTheDocument();
     });
 
     // Save button should still be disabled

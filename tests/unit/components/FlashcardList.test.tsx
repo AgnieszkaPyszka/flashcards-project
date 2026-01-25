@@ -24,8 +24,8 @@ vi.mock("@/components/FlashcardListItem", () => ({
 
 describe("FlashcardList", () => {
   const mockFlashcards: FlashcardProposalViewModel[] = [
-    { front: "Question 1", back: "Answer 1", source: "ai-full", accepted: false, edited: false },
-    { front: "Question 2", back: "Answer 2", source: "ai-full", accepted: true, edited: false },
+    { id: "1", front: "Question 1", back: "Answer 1", source: "ai-full", status: "pending", edited: false },
+    { id: "2", front: "Question 2", back: "Answer 2", source: "ai-full", status: "accepted", edited: false },
   ];
 
   const mockHandlers = {
@@ -70,14 +70,14 @@ describe("FlashcardList", () => {
     // Click the first accept button
     acceptButtons[0].click();
 
-    // Check if onAccept was called with the correct index
-    expect(mockHandlers.onAccept).toHaveBeenCalledWith(0);
+    // Check if onAccept was called with the correct id
+    expect(mockHandlers.onAccept).toHaveBeenCalledWith("1");
 
     // Click the second accept button
     acceptButtons[1].click();
 
-    // Check if onAccept was called with the correct index
-    expect(mockHandlers.onAccept).toHaveBeenCalledWith(1);
+    // Check if onAccept was called with the correct id
+    expect(mockHandlers.onAccept).toHaveBeenCalledWith("2");
   });
 
   it("calls onReject with the correct index when a flashcard is rejected", () => {
@@ -96,8 +96,8 @@ describe("FlashcardList", () => {
     // Click the first reject button
     rejectButtons[0].click();
 
-    // Check if onReject was called with the correct index
-    expect(mockHandlers.onReject).toHaveBeenCalledWith(0);
+    // Check if onReject was called with the correct id
+    expect(mockHandlers.onReject).toHaveBeenCalledWith("1");
   });
 
   it("calls onEdit with the correct index and values when a flashcard is edited", () => {
@@ -116,8 +116,8 @@ describe("FlashcardList", () => {
     // Click the second edit button
     editButtons[1].click();
 
-    // Check if onEdit was called with the correct index and values
-    expect(mockHandlers.onEdit).toHaveBeenCalledWith(1, "Edited Front", "Edited Back");
+    // Check if onEdit was called with the correct id and values
+    expect(mockHandlers.onEdit).toHaveBeenCalledWith("2", "Edited Front", "Edited Back");
   });
 
   it("renders empty state when no flashcards are provided", () => {

@@ -19,9 +19,9 @@ vi.mock("sonner", () => ({
 
 describe("BulkSaveButton", () => {
   const mockFlashcards: FlashcardProposalViewModel[] = [
-    { front: "Question 1", back: "Answer 1", source: "ai-full", accepted: true, edited: false },
-    { front: "Question 2", back: "Answer 2", source: "ai-full", accepted: false, edited: false },
-    { front: "Question 3", back: "Answer 3", source: "ai-edited", accepted: true, edited: true },
+    { id: "1", front: "Question 1", back: "Answer 1", source: "ai-full", status: "accepted", edited: false },
+    { id: "2", front: "Question 2", back: "Answer 2", source: "ai-full", status: "pending", edited: false },
+    { id: "3", front: "Question 3", back: "Answer 3", source: "ai-edited", status: "accepted", edited: true },
   ];
 
   const mockGenerationId = 123;
@@ -41,12 +41,12 @@ describe("BulkSaveButton", () => {
       />
     );
 
-    expect(screen.getByText("Save Accepted")).toBeInTheDocument();
-    expect(screen.getByText("Save All")).toBeInTheDocument();
+    expect(screen.getByTestId("save-accepted-flashcards-button")).toBeInTheDocument();
+    expect(screen.getByTestId("save-all-flashcards-button")).toBeInTheDocument();
   });
 
   it("disables Save Accepted button when no flashcards are accepted", () => {
-    const noAcceptedFlashcards = mockFlashcards.map((card) => ({ ...card, accepted: false }));
+    const noAcceptedFlashcards = mockFlashcards.map((card) => ({ ...card, status: "pending" }));
 
     render(
       <BulkSaveButton
@@ -57,8 +57,8 @@ describe("BulkSaveButton", () => {
       />
     );
 
-    expect(screen.getByText("Save Accepted")).toBeDisabled();
-    expect(screen.getByText("Save All")).not.toBeDisabled();
+    expect(screen.getByTestId("save-accepted-flashcards-button")).toBeDisabled();
+    expect(screen.getByTestId("save-all-flashcards-button")).not.toBeDisabled();
   });
 
   it("disables both buttons when disabled prop is true", () => {
@@ -71,15 +71,17 @@ describe("BulkSaveButton", () => {
       />
     );
 
-    expect(screen.getByText("Save Accepted")).toBeDisabled();
-    expect(screen.getByText("Save All")).toBeDisabled();
+    expect(screen.getByTestId("save-accepted-flashcards-button")).toBeDisabled();
+    expect(screen.getByTestId("save-all-flashcards-button")).toBeDisabled();
   });
 
   it("saves only accepted flashcards when Save Accepted is clicked", async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve({ success: true }),
-    });
+    mockFetch.mockImplementationOnce(() => 
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ success: true }),
+      })
+    );
 
     render(
       <BulkSaveButton
@@ -91,7 +93,7 @@ describe("BulkSaveButton", () => {
     );
 
     // Click Save Accepted button
-    await userEvent.click(screen.getByText("Save Accepted"));
+    await userEvent.click(screen.getByTestId("save-accepted-flashcards-button"));
 
     // Should show loading state - skip this check as it's difficult to test
     // Instead, just verify that the API was called correctly
@@ -121,10 +123,12 @@ describe("BulkSaveButton", () => {
   });
 
   it("saves all flashcards when Save All is clicked", async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve({ success: true }),
-    });
+    mockFetch.mockImplementationOnce(() => 
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ success: true }),
+      })
+    );
 
     render(
       <BulkSaveButton
@@ -136,7 +140,7 @@ describe("BulkSaveButton", () => {
     );
 
     // Click Save All button
-    await userEvent.click(screen.getByText("Save All"));
+    await userEvent.click(screen.getByTestId("save-all-flashcards-button"));
 
     // Verify API was called with all flashcards
     await waitFor(() => {
@@ -162,11 +166,14 @@ describe("BulkSaveButton", () => {
 
   it("handles API error when saving flashcards", async () => {
     // Mock failed API response
-    mockFetch.mockResolvedValueOnce({
-      ok: false,
-      status: 500,
-      statusText: "Internal Server Error",
-    });
+    mockFetch.mockImplementationOnce(() => 
+      Promise.resolve({
+        ok: false,
+        status: 500,
+        statusText: "Internal Server Error",
+        json: () => Promise.resolve({ message: "Nie udało się zapisać fiszek" })
+      })
+    );
 
     render(
       <BulkSaveButton
@@ -178,11 +185,11 @@ describe("BulkSaveButton", () => {
     );
 
     // Click Save All button
-    await userEvent.click(screen.getByText("Save All"));
+    await userEvent.click(screen.getByTestId("save-all-flashcards-button"));
 
     // Wait for error message to be displayed
     await waitFor(() => {
-      expect(screen.getByText(/failed to save flashcards/i)).toBeInTheDocument();
+      expect(screen.getByText(/nie udało się zapisać fiszek/i)).toBeInTheDocument();
     });
 
     // onSuccess callback should not be called
