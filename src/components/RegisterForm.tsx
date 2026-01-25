@@ -43,18 +43,15 @@ export function RegisterForm() {
   const handleEmailChange = (value: string) => {
     setEmail(value);
     setErrorMessage(null);
-    if (fieldErrors.email) {
-      setFieldErrors((prev) => ({ ...prev, email: validateEmail(value) }));
-    }
+    if (fieldErrors.email) setFieldErrors((prev) => ({ ...prev, email: validateEmail(value) }));
   };
 
   const handlePasswordChange = (value: string) => {
     setPassword(value);
     setErrorMessage(null);
 
-    if (fieldErrors.password) {
-      setFieldErrors((prev) => ({ ...prev, password: validatePassword(value) }));
-    }
+    if (fieldErrors.password) setFieldErrors((prev) => ({ ...prev, password: validatePassword(value) }));
+
     if (fieldErrors.confirmPassword && confirmPassword) {
       setFieldErrors((prev) => ({ ...prev, confirmPassword: validateConfirmPassword(confirmPassword, value) }));
     }
@@ -87,20 +84,19 @@ export function RegisterForm() {
     try {
       setIsLoading(true);
 
-      const response = await fetch("/api/auth/register", {
+      const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const data = await response.json().catch(() => ({}) as any);
+      const data = await res.json().catch(() => ({}));
 
-      if (!response.ok) {
-        throw new Error(data?.message || "Registration failed. Please try again.");
+      if (!res.ok) {
+        throw new Error(data?.message ?? "Registration failed. Please try again.");
       }
 
-      // ✅ Jeśli register zwrócił sesję (email confirmation OFF)
+      // Email confirmation OFF -> mamy sesję
       if (data?.access_token && data?.refresh_token) {
         await supabase.auth.setSession({
           access_token: data.access_token,
@@ -111,12 +107,12 @@ export function RegisterForm() {
         return;
       }
 
-      // ✅ Jeśli email confirmation ON → brak sesji
+      // Email confirmation ON -> brak sesji
       setErrorMessage(data?.message ?? "Sprawdź maila i potwierdź konto, potem zaloguj się.");
       setPassword("");
       setConfirmPassword("");
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "An unexpected error occurred");
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : "An unexpected error occurred");
     } finally {
       setIsLoading(false);
     }

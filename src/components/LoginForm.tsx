@@ -7,7 +7,12 @@ import { ErrorNotification } from "./ErrorNotification";
 import { Loader2 } from "lucide-react";
 
 export function LoginForm() {
-  const supabase = getSupabaseClient();
+  let supabase: ReturnType<typeof getSupabaseClient> | null = null;
+  try {
+    supabase = getSupabaseClient();
+  } catch {
+    supabase = null;
+  }
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -41,7 +46,7 @@ export function LoginForm() {
 
       // ✅ KLUCZ: ustawiamy sesję w supabase-js (localStorage),
       // bo HttpOnly cookies są niewidoczne dla supabase w przeglądarce
-      if (data?.access_token && data?.refresh_token) {
+      if (supabase && data?.access_token && data?.refresh_token) {
         await supabase.auth.setSession({
           access_token: data.access_token,
           refresh_token: data.refresh_token,
