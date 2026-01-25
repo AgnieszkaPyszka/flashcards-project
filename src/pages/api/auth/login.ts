@@ -13,23 +13,16 @@ const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
-export const POST: APIRoute = async ({ request }) => {
+function getSupabaseEnv(locals: App.Locals) {
+  const runtimeEnv = locals.runtime?.env as Record<string, string | undefined> | undefined;
+  const url = runtimeEnv?.PUBLIC_SUPABASE_URL ?? import.meta.env.PUBLIC_SUPABASE_URL;
+  const key = runtimeEnv?.PUBLIC_SUPABASE_KEY ?? import.meta.env.PUBLIC_SUPABASE_KEY;
+  return { url, key };
+}
+
+export const POST: APIRoute = async ({ request, cookies, locals, url }) => {
   try {
-    const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_KEY;
-
-    if (!supabaseUrl || !supabaseAnonKey) {
-      return new Response(
-        JSON.stringify({
-          error: "Server misconfigured",
-          message: "Supabase env not set (PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_KEY)",
-        }),
-        { status: 500, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    // Parse and validate request body
-    const body = await request.json();
+    const body = await request.json().catch(() => ({}));
     const validationResult = loginSchema.safeParse(body);
 
     if (!validationResult.success) {
@@ -45,25 +38,26 @@ export const POST: APIRoute = async ({ request }) => {
 
     const { email, password } = validationResult.data;
 
-    // Fresh Supabase client for login operation
+    const { url: supabaseUrl, key: supabaseAnonKey } = getSupabaseEnv(locals);
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return new Response(
+        JSON.stringify({
+          error: "Server misconfigured",
+          message: "Missing PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_KEY",
+        }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-        detectSessionInUrl: false,
-      },
+      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
     });
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      logger.error(new Error(error.message), {
-        errorCode: error.status,
-        errorName: error.name,
-        email, // safe
-      });
+      logger.error(new Error(error.message), { errorCode: error.status, errorName: error.name, email });
 
-      // Generic error for security
       return new Response(
         JSON.stringify({
           error: "Login failed",
@@ -75,44 +69,39 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (!data.session || !data.user) {
       return new Response(
-        JSON.stringify({
-          error: "Login failed",
-          message: "Failed to create session. Please try again.",
-        }),
+        JSON.stringify({ error: "Login failed", message: "Failed to create session. Please try again." }),
         { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
 
-    const response = new Response(
+    const isSecure = url.protocol === "https:";
+
+    cookies.set("sb-access-token", data.session.access_token, {
+      path: "/",
+      httpOnly: true,
+      sameSite: "lax",
+      secure: isSecure,
+      maxAge: data.session.expires_in ?? 3600,
+    });
+
+    cookies.set("sb-refresh-token", data.session.refresh_token, {
+      path: "/",
+      httpOnly: true,
+      sameSite: "lax",
+      secure: isSecure,
+      maxAge: 60 * 60 * 24 * 7, // 7 dni
+    });
+
+    return new Response(
       JSON.stringify({
         message: "Login successful",
-        user: {
-          id: data.user.id,
-          email: data.user.email,
-        },
+        user: { id: data.user.id, email: data.user.email },
         redirect: "/",
       }),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );
-
-    // Cookies (Cloudflare Pages = HTTPS → Secure ok)
-    const accessMaxAge = data.session.expires_in ?? 3600;
-
-    response.headers.append(
-      "Set-Cookie",
-      `sb-access-token=${data.session.access_token}; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=${accessMaxAge}`
-    );
-
-    response.headers.append(
-      "Set-Cookie",
-      `sb-refresh-token=${data.session.refresh_token}; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=604800`
-    );
-
-    return response;
-  } catch (error) {
-    logger.error(error instanceof Error ? error : new Error(String(error)), {
-      operation: "login",
-    });
+  } catch (err) {
+    logger.error(err instanceof Error ? err : new Error(String(err)), { operation: "login" });
 
     return new Response(
       JSON.stringify({

@@ -6,9 +6,6 @@ import { Logger } from "@/lib/logger";
 
 const logger = new Logger("auth/register");
 
-const supabaseUrl = process.env.SUPABASE_URL || import.meta.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_KEY || import.meta.env.SUPABASE_KEY;
-
 export const prerender = false;
 
 const registerSchema = z.object({
@@ -16,10 +13,16 @@ const registerSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters long"),
 });
 
-export const POST: APIRoute = async ({ request }) => {
+function getSupabaseEnv(locals: App.Locals) {
+  const runtimeEnv = locals.runtime?.env as Record<string, string | undefined> | undefined;
+  const url = runtimeEnv?.PUBLIC_SUPABASE_URL ?? import.meta.env.PUBLIC_SUPABASE_URL;
+  const key = runtimeEnv?.PUBLIC_SUPABASE_KEY ?? import.meta.env.PUBLIC_SUPABASE_KEY;
+  return { url, key };
+}
+
+export const POST: APIRoute = async ({ request, cookies, locals, url }) => {
   try {
-    // Parse and validate request body
-    const body = await request.json();
+    const body = await request.json().catch(() => ({}));
     const validationResult = registerSchema.safeParse(body);
 
     if (!validationResult.success) {
@@ -29,38 +32,32 @@ export const POST: APIRoute = async ({ request }) => {
           message: validationResult.error.errors[0]?.message || "Validation failed",
           details: validationResult.error.errors,
         }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        }
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
     const { email, password } = validationResult.data;
 
-    // Create a fresh Supabase client for authentication
+    const { url: supabaseUrl, key: supabaseAnonKey } = getSupabaseEnv(locals);
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return new Response(
+        JSON.stringify({
+          error: "Server misconfigured",
+          message: "Missing PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_KEY",
+        }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-        detectSessionInUrl: false,
-      },
+      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
     });
 
-    // Register user with Supabase Auth
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
+    const { data, error } = await supabase.auth.signUp({ email, password });
 
     if (error) {
-      logger.error(new Error(error.message), {
-        errorCode: error.status,
-        errorName: error.name,
-        email: email,
-      });
+      logger.error(new Error(error.message), { errorCode: error.status, errorName: error.name, email });
 
-      // Check if user already exists
       if (
         error.message.includes("already registered") ||
         error.message.includes("already exists") ||
@@ -73,10 +70,7 @@ export const POST: APIRoute = async ({ request }) => {
               "An account with this email already exists. If you forgot your password, please use the 'Forgot Password' option to reset it.",
             redirect: "/forgot-password",
           }),
-          {
-            status: 409, // Conflict
-            headers: { "Content-Type": "application/json" },
-          }
+          { status: 409, headers: { "Content-Type": "application/json" } }
         );
       }
 
@@ -85,83 +79,57 @@ export const POST: APIRoute = async ({ request }) => {
           error: "Registration failed",
           message: error.message || "Failed to create account. Please try again.",
         }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        }
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
     if (!data.user) {
-      return new Response(
-        JSON.stringify({
-          error: "Registration failed",
-          message: "Failed to create user account",
-        }),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      return new Response(JSON.stringify({ error: "Registration failed", message: "Failed to create user account" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
-    // Set session cookies if session exists
+    // Jeśli supabase zwróci session, ustawiamy cookies (czasem przy wyłączonych potwierdzeniach maila)
     if (data.session) {
-      const response = new Response(
-        JSON.stringify({
-          message: "Registration successful",
-          user: {
-            id: data.user.id,
-            email: data.user.email,
-          },
-        }),
-        {
-          status: 201,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      const isSecure = url.protocol === "https:";
 
-      // Set session cookies
-      response.headers.set(
-        "Set-Cookie",
-        `sb-access-token=${data.session.access_token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${data.session.expires_in || 3600}`
-      );
-      response.headers.append(
-        "Set-Cookie",
-        `sb-refresh-token=${data.session.refresh_token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800`
-      );
+      cookies.set("sb-access-token", data.session.access_token, {
+        path: "/",
+        httpOnly: true,
+        sameSite: "lax",
+        secure: isSecure,
+        maxAge: data.session.expires_in ?? 3600,
+      });
 
-      return response;
+      cookies.set("sb-refresh-token", data.session.refresh_token, {
+        path: "/",
+        httpOnly: true,
+        sameSite: "lax",
+        secure: isSecure,
+        maxAge: 60 * 60 * 24 * 7, // 7 dni
+      });
     }
 
-    // If email confirmation is required, user won't have a session yet
+    // Jeśli email confirmation jest włączone, session może być null → nadal sukces
     return new Response(
       JSON.stringify({
-        message: "Registration successful. Please check your email to confirm your account.",
-        user: {
-          id: data.user.id,
-          email: data.user.email,
-        },
+        message: data.session
+          ? "Registration successful"
+          : "Registration successful. Please check your email to confirm your account.",
+        user: { id: data.user.id, email: data.user.email },
       }),
-      {
-        status: 201,
-        headers: { "Content-Type": "application/json" },
-      }
+      { status: 201, headers: { "Content-Type": "application/json" } }
     );
-  } catch (error) {
-    logger.error(error instanceof Error ? error : new Error(String(error)), {
-      operation: "register",
-    });
+  } catch (err) {
+    logger.error(err instanceof Error ? err : new Error(String(err)), { operation: "register" });
 
     return new Response(
       JSON.stringify({
         error: "Internal server error",
         message: "An unexpected error occurred. Please try again later.",
       }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 };
