@@ -1,52 +1,13 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { Button } from "./ui/button";
-import { getSupabaseClient } from "@/lib/supabase";
 
-export function Header() {
-  const supabase = useMemo(() => {
-    try {
-      return getSupabaseClient();
-    } catch {
-      // jeśli envów brak, header i tak nie powinien wysadzić całej strony
-      return null;
-    }
-  }, []);
+interface HeaderProps {
+  initialUserEmail?: string | null;
+}
 
-  const [userEmail, setUserEmail] = useState<string | null>(null);
+export function Header({ initialUserEmail = null }: HeaderProps) {
+  const [userEmail, setUserEmail] = useState<string | null>(initialUserEmail);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
-
-  useEffect(() => {
-    if (!supabase) {
-      setIsLoadingAuth(false);
-      setUserEmail(null);
-      return;
-    }
-
-    let isMounted = true;
-
-    supabase.auth
-      .getSession()
-      .then(({ data }) => {
-        if (!isMounted) return;
-        setUserEmail(data.session?.user?.email ?? null);
-        setIsLoadingAuth(false);
-      })
-      .catch(() => {
-        if (!isMounted) return;
-        setUserEmail(null);
-        setIsLoadingAuth(false);
-      });
-
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUserEmail(session?.user?.email ?? null);
-    });
-
-    return () => {
-      isMounted = false;
-      sub.subscription.unsubscribe();
-    };
-  }, [supabase]);
 
   const handleLogout = useCallback(async () => {
     if (isLoggingOut) return;
@@ -59,14 +20,7 @@ export function Header() {
       });
 
       if (!response.ok) throw new Error("Failed to log out");
-
-      // frontend cleanup (opcjonalnie)
-      try {
-        await supabase?.auth.signOut();
-      } catch {
-        // ignore
-      }
-
+      setUserEmail(null);
       window.location.href = "/login";
     } catch (error) {
       // eslint-disable-next-line no-console
@@ -74,7 +28,7 @@ export function Header() {
       alert("Failed to log out. Please try again.");
       setIsLoggingOut(false);
     }
-  }, [isLoggingOut, supabase]);
+  }, [isLoggingOut]);
 
   const isAuthenticated = !!userEmail;
 
@@ -100,9 +54,7 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-4">
-          {isLoadingAuth ? (
-            <span className="text-sm text-muted-foreground">Ładowanie...</span>
-          ) : isAuthenticated ? (
+          {isAuthenticated ? (
             <>
               <span className="hidden md:inline text-sm text-muted-foreground" aria-label={`Logged in as ${userEmail}`}>
                 {userEmail}

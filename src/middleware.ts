@@ -1,5 +1,5 @@
 import { defineMiddleware } from "astro:middleware";
-import { createClient } from "@supabase/supabase-js";
+import { createServerClient } from "@supabase/ssr";
 import type { Database } from "./db/database.types";
 
 const PUBLIC_ROUTES = ["/login", "/register", "/forgot-password", "/reset-password"];
@@ -8,7 +8,7 @@ const PUBLIC_API_ROUTES = [
   "/api/auth/register",
   "/api/auth/forgot-password",
   "/api/auth/reset-password",
-  "/api/health", // jeśli masz
+  "/api/health",
 ];
 
 function isAsset(pathname: string) {
@@ -28,44 +28,44 @@ function isPublicRoute(pathname: string) {
 export const onRequest = defineMiddleware(async (context, next) => {
   if (isAsset(context.url.pathname)) return next();
 
-  const runtimeEnv = context.locals.runtime?.env as Record<string, string | undefined> | undefined;
-
-  // ✅ runtime env na Cloudflare + fallback na lokalnie
-  const supabaseUrl = runtimeEnv?.PUBLIC_SUPABASE_URL ?? import.meta.env.PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = runtimeEnv?.PUBLIC_SUPABASE_KEY ?? import.meta.env.PUBLIC_SUPABASE_KEY;
+  const env = context.locals.runtime?.env as Record<string, string | undefined> | undefined;
+  const supabaseUrl = env?.PUBLIC_SUPABASE_URL ?? import.meta.env.PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = env?.PUBLIC_SUPABASE_KEY ?? import.meta.env.PUBLIC_SUPABASE_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
     if (context.url.pathname.startsWith("/api/")) {
       return new Response(
-        JSON.stringify({
-          error: "Server misconfigured",
-          details: "Missing PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_KEY",
-        }),
+        JSON.stringify({ error: "Server misconfigured", details: "Missing PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_KEY" }),
         { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
     return new Response("Server misconfigured: missing Supabase env", { status: 500 });
   }
 
-  const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+  // ✅ SSR/Edge-safe supabase client z pełną obsługą cookies (refresh itp.)
+  const supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      getAll() {
+        return context.cookies.getAll().map((c) => ({ name: c.name, value: c.value }));
+      },
+      setAll(cookiesToSet) {
+        for (const { name, value, options } of cookiesToSet) {
+          context.cookies.set(name, value, options);
+        }
+      },
+    },
   });
-
-  // cookies → session
-  const accessToken = context.cookies.get("sb-access-token")?.value;
-  const refreshToken = context.cookies.get("sb-refresh-token")?.value;
-
-  if (accessToken && refreshToken) {
-    await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
-  }
 
   context.locals.supabase = supabase;
 
-  // guard
   const isPublic = isPublicRoute(context.url.pathname);
+
   if (!isPublic) {
-    const { data } = await supabase.auth.getSession();
-    if (!data.session) {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session) {
       if (context.url.pathname.startsWith("/api/")) {
         return new Response(JSON.stringify({ error: "Unauthorized" }), {
           status: 401,
@@ -76,5 +76,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     }
   }
 
-  return next();
+  // ✅ ważne: pozwala supabase/ssr dopisać cookies do odpowiedzi
+  const response = await next();
+  return response;
 });
