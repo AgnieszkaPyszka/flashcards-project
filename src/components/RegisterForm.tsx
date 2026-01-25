@@ -5,8 +5,11 @@ import { Label } from "@/components/ui/label";
 import { ErrorNotification } from "./ErrorNotification";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getSupabaseClient } from "@/lib/supabase";
 
 export function RegisterForm() {
+  const supabase = getSupabaseClient();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -19,33 +22,21 @@ export function RegisterForm() {
   }>({});
 
   const validateEmail = (value: string): string | undefined => {
-    if (!value) {
-      return "Email is required";
-    }
+    if (!value) return "Email is required";
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(value)) {
-      return "Invalid email format";
-    }
+    if (!emailRegex.test(value)) return "Invalid email format";
     return undefined;
   };
 
   const validatePassword = (value: string): string | undefined => {
-    if (!value) {
-      return "Password is required";
-    }
-    if (value.length < 8) {
-      return "Password must be at least 8 characters long";
-    }
+    if (!value) return "Password is required";
+    if (value.length < 8) return "Password must be at least 8 characters long";
     return undefined;
   };
 
   const validateConfirmPassword = (value: string, passwordValue: string): string | undefined => {
-    if (!value) {
-      return "Please confirm your password";
-    }
-    if (value !== passwordValue) {
-      return "Passwords do not match";
-    }
+    if (!value) return "Please confirm your password";
+    if (value !== passwordValue) return "Passwords do not match";
     return undefined;
   };
 
@@ -53,21 +44,19 @@ export function RegisterForm() {
     setEmail(value);
     setErrorMessage(null);
     if (fieldErrors.email) {
-      const error = validateEmail(value);
-      setFieldErrors((prev) => ({ ...prev, email: error }));
+      setFieldErrors((prev) => ({ ...prev, email: validateEmail(value) }));
     }
   };
 
   const handlePasswordChange = (value: string) => {
     setPassword(value);
     setErrorMessage(null);
+
     if (fieldErrors.password) {
-      const error = validatePassword(value);
-      setFieldErrors((prev) => ({ ...prev, password: error }));
+      setFieldErrors((prev) => ({ ...prev, password: validatePassword(value) }));
     }
     if (fieldErrors.confirmPassword && confirmPassword) {
-      const error = validateConfirmPassword(confirmPassword, value);
-      setFieldErrors((prev) => ({ ...prev, confirmPassword: error }));
+      setFieldErrors((prev) => ({ ...prev, confirmPassword: validateConfirmPassword(confirmPassword, value) }));
     }
   };
 
@@ -75,8 +64,7 @@ export function RegisterForm() {
     setConfirmPassword(value);
     setErrorMessage(null);
     if (fieldErrors.confirmPassword) {
-      const error = validateConfirmPassword(value, password);
-      setFieldErrors((prev) => ({ ...prev, confirmPassword: error }));
+      setFieldErrors((prev) => ({ ...prev, confirmPassword: validateConfirmPassword(value, password) }));
     }
   };
 
@@ -88,17 +76,13 @@ export function RegisterForm() {
     const passwordError = validatePassword(password);
     const confirmPasswordError = validateConfirmPassword(confirmPassword, password);
 
-    const errors = {
+    setFieldErrors({
       email: emailError,
       password: passwordError,
       confirmPassword: confirmPasswordError,
-    };
+    });
 
-    setFieldErrors(errors);
-
-    if (emailError || passwordError || confirmPasswordError) {
-      return;
-    }
+    if (emailError || passwordError || confirmPasswordError) return;
 
     try {
       setIsLoading(true);
@@ -109,14 +93,25 @@ export function RegisterForm() {
         body: JSON.stringify({ email, password }),
       });
 
+      const data = await response.json().catch(() => ({}) as any);
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || "Registration failed. Please try again.");
+        throw new Error(data?.message || "Registration failed. Please try again.");
       }
 
-      // Success - redirect will be handled by backend or client-side navigation
-      // For now, we just clear the form
-      setEmail("");
+      // ✅ Jeśli register zwrócił sesję (email confirmation OFF)
+      if (data?.access_token && data?.refresh_token) {
+        await supabase.auth.setSession({
+          access_token: data.access_token,
+          refresh_token: data.refresh_token,
+        });
+
+        window.location.href = data?.redirect ?? "/generate";
+        return;
+      }
+
+      // ✅ Jeśli email confirmation ON → brak sesji
+      setErrorMessage(data?.message ?? "Sprawdź maila i potwierdź konto, potem zaloguj się.");
       setPassword("");
       setConfirmPassword("");
     } catch (error) {

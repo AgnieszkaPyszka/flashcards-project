@@ -106,7 +106,10 @@ export const POST: APIRoute = async ({ request, cookies, locals, url }) => {
       JSON.stringify({
         message: "Login successful",
         user: { id: data.user.id, email: data.user.email },
-        redirect: "/",
+        redirect: "/generate",
+        access_token: data.session.access_token,
+        refresh_token: data.session.refresh_token,
+        expires_in: data.session.expires_in ?? 3600,
       }),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );

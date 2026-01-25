@@ -1,115 +1,62 @@
 import { useState } from "react";
+import { getSupabaseClient } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ErrorNotification } from "./ErrorNotification";
 import { Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 export function LoginForm() {
+  const supabase = getSupabaseClient();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<{
-    email?: string;
-    password?: string;
-  }>({});
-
-  const validateEmail = (value: string): string | undefined => {
-    if (!value) {
-      return "Email is required";
-    }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(value)) {
-      return "Invalid email format";
-    }
-    return undefined;
-  };
-
-  const validatePassword = (value: string): string | undefined => {
-    if (!value) {
-      return "Password is required";
-    }
-    return undefined;
-  };
-
-  const handleEmailChange = (value: string) => {
-    setEmail(value);
-    setErrorMessage(null);
-    if (fieldErrors.email) {
-      const error = validateEmail(value);
-      setFieldErrors((prev) => ({ ...prev, email: error }));
-    }
-  };
-
-  const handlePasswordChange = (value: string) => {
-    setPassword(value);
-    setErrorMessage(null);
-    if (fieldErrors.password) {
-      const error = validatePassword(value);
-      setFieldErrors((prev) => ({ ...prev, password: error }));
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
 
-    const emailError = validateEmail(email);
-    const passwordError = validatePassword(password);
-
-    const errors = {
-      email: emailError,
-      password: passwordError,
-    };
-
-    setFieldErrors(errors);
-
-    if (emailError || passwordError) {
-      return;
-    }
-
     try {
       setIsLoading(true);
 
-      const response = await fetch("/api/auth/login", {
+      const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || "Login failed. Please check your credentials.");
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(data?.message ?? "Login failed");
       }
 
-      window.location.href = "/";
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "An unexpected error occurred");
+      // ✅ KLUCZ: ustawiamy sesję w supabase-js (localStorage),
+      // bo HttpOnly cookies są niewidoczne dla supabase w przeglądarce
+      if (data?.access_token && data?.refresh_token) {
+        await supabase.auth.setSession({
+          access_token: data.access_token,
+          refresh_token: data.refresh_token,
+        });
+      }
+
+      window.location.href = data?.redirect ?? "/generate";
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : "Unexpected error");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6" noValidate data-test-id="login-form">
+    <form onSubmit={handleSubmit} className="space-y-6">
       {errorMessage && <ErrorNotification message={errorMessage} />}
 
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          type="email"
-          value={email}
-          onChange={(e) => handleEmailChange(e.target.value)}
-          disabled={isLoading}
-          placeholder="Enter your email"
-          aria-invalid={!!fieldErrors.email}
-          className={cn(fieldErrors.email && "border-red-500 focus-visible:ring-red-500")}
-          data-test-id="login-email-input"
-        />
-        {fieldErrors.email && <p className="text-sm text-red-500">{fieldErrors.email}</p>}
+        <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} disabled={isLoading} />
       </div>
 
       <div className="space-y-2">
@@ -118,19 +65,14 @@ export function LoginForm() {
           id="password"
           type="password"
           value={password}
-          onChange={(e) => handlePasswordChange(e.target.value)}
+          onChange={(e) => setPassword(e.target.value)}
           disabled={isLoading}
-          placeholder="Enter your password"
-          aria-invalid={!!fieldErrors.password}
-          className={cn(fieldErrors.password && "border-red-500 focus-visible:ring-red-500")}
-          data-test-id="login-password-input"
         />
-        {fieldErrors.password && <p className="text-sm text-red-500">{fieldErrors.password}</p>}
       </div>
 
-      <Button type="submit" disabled={isLoading} size="lg" className="w-full" data-test-id="login-submit-button">
+      <Button type="submit" disabled={isLoading} size="lg" className="w-full">
         {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        {isLoading ? "Logging in..." : "Login"}
+        {isLoading ? "Logging in..." : "Log in"}
       </Button>
     </form>
   );
