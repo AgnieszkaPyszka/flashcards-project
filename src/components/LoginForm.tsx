@@ -18,6 +18,12 @@ export function LoginForm() {
     e.preventDefault();
     setErrorMessage(null);
 
+    // Add client-side validation
+    if (!email || !password) {
+      setErrorMessage("Email and password are required");
+      return;
+    }
+
     try {
       setIsLoading(true);
 
