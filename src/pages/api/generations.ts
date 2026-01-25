@@ -21,6 +21,13 @@ function getRuntimeEnv(locals: App.Locals) {
 }
 
 export const POST: APIRoute = async ({ request, locals, cookies }) => {
+  // ✅ TEMP: marker żeby sprawdzić czy nowy kod jest na Cloudflare
+  return new Response(JSON.stringify({ marker: "generations-v2" }), {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+  });
+
+  // --- poniżej normalna logika (na razie nieosiągalna przez return) ---
   try {
     const body = (await request.json()) as GenerateFlashcardsCommand;
 
@@ -43,21 +50,17 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
     if (!supabaseUrl || !supabaseAnonKey) {
       return new Response(
         JSON.stringify({ error: "Server misconfigured", message: "Missing PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_KEY" }),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json" },
-        }
+        { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
 
-    // ✅ zawsze twórz klienta tu (Workers-safe)
     const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
       auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
     });
 
-    // ✅ podepnij sesję z cookies (tak jak w middleware)
     const accessToken = cookies.get("sb-access-token")?.value;
     const refreshToken = cookies.get("sb-refresh-token")?.value;
+
     if (accessToken && refreshToken) {
       await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
     } else {
@@ -75,12 +78,11 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error("[/api/generations] error:", error);
     return new Response(
       JSON.stringify({
         error: "Internal server error",
-        details: import.meta.env.DEV ? (error as Error).message : "An unexpected error occurred",
+        message: error instanceof Error ? error.message : String(error),
       }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
