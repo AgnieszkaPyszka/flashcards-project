@@ -40,31 +40,6 @@ export function RegisterForm() {
     return undefined;
   };
 
-  const handleEmailChange = (value: string) => {
-    setEmail(value);
-    setErrorMessage(null);
-    if (fieldErrors.email) setFieldErrors((prev) => ({ ...prev, email: validateEmail(value) }));
-  };
-
-  const handlePasswordChange = (value: string) => {
-    setPassword(value);
-    setErrorMessage(null);
-
-    if (fieldErrors.password) setFieldErrors((prev) => ({ ...prev, password: validatePassword(value) }));
-
-    if (fieldErrors.confirmPassword && confirmPassword) {
-      setFieldErrors((prev) => ({ ...prev, confirmPassword: validateConfirmPassword(confirmPassword, value) }));
-    }
-  };
-
-  const handleConfirmPasswordChange = (value: string) => {
-    setConfirmPassword(value);
-    setErrorMessage(null);
-    if (fieldErrors.confirmPassword) {
-      setFieldErrors((prev) => ({ ...prev, confirmPassword: validateConfirmPassword(value, password) }));
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
@@ -128,7 +103,7 @@ export function RegisterForm() {
           id="email"
           type="email"
           value={email}
-          onChange={(e) => handleEmailChange(e.target.value)}
+          onChange={(e) => setEmail(e.target.value)}
           disabled={isLoading}
           placeholder="Enter your email"
           aria-invalid={!!fieldErrors.email}
@@ -143,7 +118,7 @@ export function RegisterForm() {
           id="password"
           type="password"
           value={password}
-          onChange={(e) => handlePasswordChange(e.target.value)}
+          onChange={(e) => setPassword(e.target.value)}
           disabled={isLoading}
           placeholder="Enter your password"
           aria-invalid={!!fieldErrors.password}
@@ -158,7 +133,7 @@ export function RegisterForm() {
           id="confirmPassword"
           type="password"
           value={confirmPassword}
-          onChange={(e) => handleConfirmPasswordChange(e.target.value)}
+          onChange={(e) => setConfirmPassword(e.target.value)}
           disabled={isLoading}
           placeholder="Confirm your password"
           aria-invalid={!!fieldErrors.confirmPassword}

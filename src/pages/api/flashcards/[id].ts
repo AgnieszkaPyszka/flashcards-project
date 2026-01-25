@@ -136,7 +136,7 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
     return new Response(
       JSON.stringify({
         error: "Internal server error",
-        details: process.env.NODE_ENV === "development" ? (error as Error).message : "An unexpected error occurred",
+        details: import.meta.env.DEV ? (error as Error).message : "An unexpected error occurred",
       }),
       {
         status: 500,
@@ -230,7 +230,7 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
     return new Response(
       JSON.stringify({
         error: "Internal server error",
-        details: process.env.NODE_ENV === "development" ? (error as Error).message : "An unexpected error occurred",
+        details: import.meta.env.DEV ? (error as Error).message : "An unexpected error occurred",
       }),
       {
         status: 500,
