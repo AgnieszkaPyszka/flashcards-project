@@ -1,16 +1,6 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import StudySessionContainer from "@/components/StudySessionContainer";
-
-// Additional layer of protection - verify user session
-// Note: Middleware already handles auth, but this provides defense in depth
-const {
-  data: { session },
-} = await Astro.locals.supabase.auth.getSession();
-
-if (!session) {
-  return Astro.redirect("/login");
-}
 ---
 
 <Layout title="Sesja nauki">

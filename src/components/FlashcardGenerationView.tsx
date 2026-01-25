@@ -8,7 +8,8 @@ import { BulkSaveButton } from "./BulkSaveButton";
 import { ErrorNotification } from "./ErrorNotification";
 
 export type FlashcardProposalViewModel = Omit<FlashcardProposalDto, "source"> & {
-  accepted: boolean;
+  id: string;
+  status: "pending" | "accepted" | "rejected";
   edited: boolean;
   source: "ai-full" | "ai-edited";
 };
@@ -46,7 +47,8 @@ export function FlashcardGenerationView() {
       setFlashcards(
         data.flashcards_proposals.map((proposal) => ({
           ...proposal,
-          accepted: false,
+          id: crypto.randomUUID(),
+          status: "pending",
           edited: false,
           source: "ai-full" as const,
         }))
@@ -59,17 +61,17 @@ export function FlashcardGenerationView() {
     }
   };
 
-  const handleFlashcardAccept = (index: number) => {
-    setFlashcards((prev) => prev.map((card, i) => (i === index ? { ...card, accepted: true } : card)));
+  const handleFlashcardAccept = (id: string) => {
+    setFlashcards((prev) => prev.map((card) => (card.id === id ? { ...card, status: "accepted" } : card)));
   };
 
-  const handleFlashcardReject = (index: number) => {
-    setFlashcards((prev) => prev.map((card, i) => (i === index ? { ...card, accepted: false } : card)));
+  const handleFlashcardReject = (id: string) => {
+    setFlashcards((prev) => prev.map((card) => (card.id === id ? { ...card, status: "rejected" } : card)));
   };
 
-  const handleFlashcardEdit = (index: number, front: string, back: string) => {
+  const handleFlashcardEdit = (id: string, front: string, back: string) => {
     setFlashcards((prev) =>
-      prev.map((card, i) => (i === index ? { ...card, front, back, edited: true, source: "ai-edited" as const } : card))
+      prev.map((card) => (card.id === id ? { ...card, front, back, edited: true, source: "ai-edited" as const } : card))
     );
   };
 

@@ -1,6 +1,6 @@
 import { defineMiddleware } from "astro:middleware";
 import { createClient } from "@supabase/supabase-js";
-import type { Database } from "../db/database.types";
+import type { Database } from "./db/database.types"; // fixed import path
 
 const PUBLIC_ROUTES = ["/login", "/register", "/forgot-password", "/reset-password"];
 

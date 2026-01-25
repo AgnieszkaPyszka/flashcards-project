@@ -9,25 +9,6 @@ interface Props {
 }
 
 const { title = "10x Astro Starter", showHeader = true } = Astro.props;
-
-// Check user authentication state
-let userEmail: string | undefined;
-let isAuthenticated = false;
-
-try {
-  const supabase = Astro.locals.supabase;
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (session?.user) {
-    isAuthenticated = true;
-    userEmail = session.user.email;
-  }
-} catch (error) {
-  // eslint-disable-next-line no-console
-  console.error("Error checking authentication state:", error);
-}
 ---
 
 <!doctype html>
@@ -40,7 +21,7 @@ try {
     <title>{title}</title>
   </head>
   <body>
-    {isAuthenticated && showHeader && userEmail && <Header client:load userEmail={userEmail} />}
+    {showHeader && <Header client:load />}
     <slot />
     <Toaster client:load />
   </body>

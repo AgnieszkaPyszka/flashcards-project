@@ -6,9 +6,6 @@ import { Logger } from "@/lib/logger";
 
 const logger = new Logger("auth/login");
 
-const supabaseUrl = process.env.SUPABASE_URL || import.meta.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_KEY || import.meta.env.SUPABASE_KEY;
-
 export const prerender = false;
 
 const loginSchema = z.object({
@@ -18,6 +15,19 @@ const loginSchema = z.object({
 
 export const POST: APIRoute = async ({ request }) => {
   try {
+    const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_KEY;
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return new Response(
+        JSON.stringify({
+          error: "Server misconfigured",
+          message: "Supabase env not set (PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_KEY)",
+        }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     // Parse and validate request body
     const body = await request.json();
     const validationResult = loginSchema.safeParse(body);
@@ -29,17 +39,13 @@ export const POST: APIRoute = async ({ request }) => {
           message: validationResult.error.errors[0]?.message || "Validation failed",
           details: validationResult.error.errors,
         }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        }
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
     const { email, password } = validationResult.data;
 
-    // Create a fresh Supabase client for authentication (without any existing session state)
-    // This ensures we start with a clean slate for login operations
+    // Fresh Supabase client for login operation
     const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
       auth: {
         persistSession: false,
@@ -48,90 +54,35 @@ export const POST: APIRoute = async ({ request }) => {
       },
     });
 
-    // Sign in user with Supabase Auth
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      // Log the actual error for debugging (without sensitive data)
       logger.error(new Error(error.message), {
         errorCode: error.status,
         errorName: error.name,
-        email: email, // Email is safe to log
+        email, // safe
       });
 
-      // Check if error is related to email confirmation
-      if (error.message.includes("email") && error.message.includes("confirm")) {
-        return new Response(
-          JSON.stringify({
-            error: "Email not confirmed",
-            message: "Please check your email and confirm your account before logging in.",
-          }),
-          {
-            status: 401,
-            headers: { "Content-Type": "application/json" },
-          }
-        );
-      }
-
-      // Check for specific error types
-      if (error.message.includes("Invalid login credentials") || error.message.includes("Invalid credentials")) {
-        return new Response(
-          JSON.stringify({
-            error: "Login failed",
-            message: "Invalid email or password. Please check your credentials and try again.",
-          }),
-          {
-            status: 401,
-            headers: { "Content-Type": "application/json" },
-          }
-        );
-      }
-
-      // Generic error message for security (don't reveal if email exists)
+      // Generic error for security
       return new Response(
         JSON.stringify({
           error: "Login failed",
           message: "Invalid email or password. Please check your credentials and try again.",
         }),
-        {
-          status: 401,
-          headers: { "Content-Type": "application/json" },
-        }
+        { status: 401, headers: { "Content-Type": "application/json" } }
       );
     }
 
-    if (!data.session) {
+    if (!data.session || !data.user) {
       return new Response(
         JSON.stringify({
           error: "Login failed",
           message: "Failed to create session. Please try again.",
         }),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json" },
-        }
+        { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
 
-    if (!data.user) {
-      return new Response(
-        JSON.stringify({
-          error: "Login failed",
-          message: "Failed to authenticate user",
-        }),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    // Note: Email confirmation check removed since enable_confirmations = false in Supabase config
-
-    // Create response with redirect to home page
     const response = new Response(
       JSON.stringify({
         message: "Login successful",
@@ -141,20 +92,20 @@ export const POST: APIRoute = async ({ request }) => {
         },
         redirect: "/",
       }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      }
+      { status: 200, headers: { "Content-Type": "application/json" } }
     );
 
-    // Set session cookies
-    response.headers.set(
-      "Set-Cookie",
-      `sb-access-token=${data.session.access_token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${data.session.expires_in || 3600}`
-    );
+    // Cookies (Cloudflare Pages = HTTPS → Secure ok)
+    const accessMaxAge = data.session.expires_in ?? 3600;
+
     response.headers.append(
       "Set-Cookie",
-      `sb-refresh-token=${data.session.refresh_token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800`
+      `sb-access-token=${data.session.access_token}; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=${accessMaxAge}`
+    );
+
+    response.headers.append(
+      "Set-Cookie",
+      `sb-refresh-token=${data.session.refresh_token}; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=604800`
     );
 
     return response;
@@ -168,10 +119,7 @@ export const POST: APIRoute = async ({ request }) => {
         error: "Internal server error",
         message: "An unexpected error occurred. Please try again later.",
       }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 };

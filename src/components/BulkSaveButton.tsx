@@ -16,19 +16,29 @@ export function BulkSaveButton({ flashcards, generationId, disabled, onSuccess }
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSave = async (onlyAccepted: boolean) => {
+  const handleSave = async (mode: "accepted" | "all") => {
     try {
       setIsSaving(true);
       setError(null);
 
+      // 🔥 wybieramy co zapisać
       const flashcardsToSave = flashcards
-        .filter((card) => !onlyAccepted || card.accepted)
+        .filter((card) => {
+          if (mode === "accepted") return card.status === "accepted";
+          // tryb "all" → zapisujemy accepted + pending, ale NIE rejected
+          return card.status !== "rejected";
+        })
         .map((card) => ({
           front: card.front,
           back: card.back,
           source: card.source,
           generation_id: generationId,
         }));
+
+      if (flashcardsToSave.length === 0) {
+        toast.warning("Nie ma fiszek do zapisania");
+        return;
+      }
 
       const command: FlashcardsCreateCommand = {
         flashcards: flashcardsToSave,
@@ -41,44 +51,53 @@ export function BulkSaveButton({ flashcards, generationId, disabled, onSuccess }
       });
 
       if (!response.ok) {
-        throw new Error("Failed to save flashcards. Please try again.");
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Nie udało się zapisać fiszek");
       }
 
-      toast.success("Success!", {
-        description: `Successfully saved ${flashcardsToSave.length} flashcards.`,
+      toast.success("Zapisano fiszki 🎉", {
+        description: `Zapisano ${flashcardsToSave.length} fiszek.`,
       });
 
       onSuccess();
     } catch (error) {
-      setError(error instanceof Error ? error.message : "An unexpected error occurred");
+      const message = error instanceof Error ? error.message : "Wystąpił nieoczekiwany błąd";
+      setError(message);
+      toast.error(message);
     } finally {
       setIsSaving(false);
     }
   };
 
+  const hasAccepted = flashcards.some((card) => card.status === "accepted");
+  const hasAnyToSave = flashcards.some((card) => card.status !== "rejected");
+
   return (
     <>
       {error && <div className="text-sm text-red-500 mb-2">{error}</div>}
+
       <div className="flex flex-col sm:flex-row gap-2 max-w-md">
+        {/* Zapisz tylko zaakceptowane */}
         <Button
-          onClick={() => handleSave(true)}
-          disabled={disabled || isSaving || !flashcards.some((card) => card.accepted)}
+          onClick={() => handleSave("accepted")}
+          disabled={disabled || isSaving || !hasAccepted}
           className="flex-1"
           data-testid="save-accepted-flashcards-button"
         >
           {isSaving ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Saving...
+              Zapisywanie...
             </>
           ) : (
-            "Save Accepted"
+            "Zapisz zaakceptowane"
           )}
         </Button>
 
+        {/* Zapisz wszystko oprócz odrzuconych */}
         <Button
-          onClick={() => handleSave(false)}
-          disabled={disabled || isSaving}
+          onClick={() => handleSave("all")}
+          disabled={disabled || isSaving || !hasAnyToSave}
           variant="outline"
           className="flex-1"
           data-testid="save-all-flashcards-button"
@@ -86,10 +105,10 @@ export function BulkSaveButton({ flashcards, generationId, disabled, onSuccess }
           {isSaving ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Saving...
+              Zapisywanie...
             </>
           ) : (
-            "Save All"
+            "Zapisz wszystkie"
           )}
         </Button>
       </div>
