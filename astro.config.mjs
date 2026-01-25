@@ -8,19 +8,10 @@ import cloudflare from "@astrojs/cloudflare";
 
 // https://astro.build/config
 export default defineConfig({
-  output: "server",
+  output: "static",
   integrations: [react(), sitemap()],
-  server: { port: 3000 },
   vite: {
     plugins: [tailwindcss()],
-    optimizeDeps: {
-      esbuildOptions: {
-        target: "esnext",
-      },
-    },
-    esbuild: {
-      target: "esnext",
-    },
   },
   adapter: cloudflare(),
 });
