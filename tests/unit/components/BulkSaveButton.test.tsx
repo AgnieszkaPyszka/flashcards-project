@@ -76,7 +76,7 @@ describe("BulkSaveButton", () => {
   });
 
   it("saves only accepted flashcards when Save Accepted is clicked", async () => {
-    mockFetch.mockImplementationOnce(() => 
+    mockFetch.mockImplementationOnce(() =>
       Promise.resolve({
         ok: true,
         json: () => Promise.resolve({ success: true }),
@@ -123,7 +123,7 @@ describe("BulkSaveButton", () => {
   });
 
   it("saves all flashcards when Save All is clicked", async () => {
-    mockFetch.mockImplementationOnce(() => 
+    mockFetch.mockImplementationOnce(() =>
       Promise.resolve({
         ok: true,
         json: () => Promise.resolve({ success: true }),
@@ -166,12 +166,12 @@ describe("BulkSaveButton", () => {
 
   it("handles API error when saving flashcards", async () => {
     // Mock failed API response
-    mockFetch.mockImplementationOnce(() => 
+    mockFetch.mockImplementationOnce(() =>
       Promise.resolve({
         ok: false,
         status: 500,
         statusText: "Internal Server Error",
-        json: () => Promise.resolve({ message: "Nie udało się zapisać fiszek" })
+        json: () => Promise.resolve({ message: "Nie udało się zapisać fiszek" }),
       })
     );
 
