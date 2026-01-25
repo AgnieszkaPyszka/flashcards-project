@@ -9,18 +9,6 @@ interface Props {
 }
 
 const { title = "10x Astro Starter", showHeader = true } = Astro.props;
-
-let userEmail: string | null = null;
-if (showHeader) {
-  try {
-    const {
-      data: { session },
-    } = await Astro.locals.supabase?.auth.getSession();
-    userEmail = session?.user?.email ?? null;
-  } catch {
-    userEmail = null;
-  }
-}
 ---
 
 <!doctype html>
@@ -33,7 +21,7 @@ if (showHeader) {
     <title>{title}</title>
   </head>
   <body>
-    {showHeader && <Header client:load initialUserEmail={userEmail} />}
+    {showHeader && <Header client:load />}
     <slot />
     <Toaster client:load />
   </body>

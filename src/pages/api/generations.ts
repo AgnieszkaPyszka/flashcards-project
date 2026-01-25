@@ -37,22 +37,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
       });
     }
 
-    const {
-      data: { user },
-      error: userError,
-    } = await locals.supabase.auth.getUser();
-
-    if (userError || !user) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized", message: "You must be logged in to generate flashcards" }),
-        {
-          status: 401,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    const generationService = new GenerationService(locals.supabase, user.id, { apiKey: openRouterKey });
+    const generationService = new GenerationService(locals.supabase, { apiKey: openRouterKey });
     const result = await generationService.generateFlashcards(body.source_text);
 
     return new Response(JSON.stringify(result), {

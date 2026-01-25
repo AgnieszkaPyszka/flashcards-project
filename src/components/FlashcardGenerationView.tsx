@@ -39,12 +39,7 @@ export function FlashcardGenerationView() {
       });
 
       if (!response.ok) {
-        const errorPayload = await response.json().catch(() => null);
-        const message =
-          (typeof errorPayload?.message === "string" && errorPayload.message) ||
-          (typeof errorPayload?.error === "string" && errorPayload.error) ||
-          `Failed to generate flashcards (HTTP ${response.status}). Please try again.`;
-        throw new Error(message);
+        throw new Error("Failed to generate flashcards. Please try again.");
       }
 
       const data: GenerationCreateResponseDto = await response.json();

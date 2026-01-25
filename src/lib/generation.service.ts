@@ -1,5 +1,6 @@
 import type { FlashcardProposalDto, GenerationCreateResponseDto } from "../types";
 import type { SupabaseClient } from "../db/supabase.client";
+import { DEFAULT_USER_ID } from "../db/supabase.client";
 import { OpenRouterService } from "./openrouter.service";
 import { OpenRouterError } from "./openrouter.types";
 import { Logger } from "./logger";
@@ -11,12 +12,8 @@ export class GenerationService {
 
   constructor(
     private readonly supabase: SupabaseClient,
-    private readonly userId: string,
     openRouterConfig?: { apiKey: string }
   ) {
-    if (!userId) {
-      throw new Error("User ID is required");
-    }
     if (!openRouterConfig?.apiKey) {
       this.logger.error(new Error("OpenRouter API key is missing. Flashcard generation will fail."));
       throw new Error("OpenRouter API key is required");
@@ -140,7 +137,7 @@ Focus on important facts, definitions, concepts, and relationships.`);
     const { data: generation, error } = await this.supabase
       .from("generations")
       .insert({
-        user_id: this.userId,
+        user_id: DEFAULT_USER_ID,
         source_text_hash: data.sourceTextHash,
         source_text_length: data.sourceText.length,
         generated_count: data.generatedCount,
@@ -162,7 +159,7 @@ Focus on important facts, definitions, concepts, and relationships.`);
     }
   ): Promise<void> {
     await this.supabase.from("generation_error_logs").insert({
-      user_id: this.userId,
+      user_id: DEFAULT_USER_ID,
       error_code: error instanceof Error ? error.name : "UNKNOWN",
       error_message: error instanceof Error ? error.message : String(error),
       model: this.model,
