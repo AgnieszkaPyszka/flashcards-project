@@ -8,7 +8,9 @@ const PUBLIC_API_ROUTES = [
   "/api/auth/register",
   "/api/auth/forgot-password",
   "/api/auth/reset-password",
-  "/api/health", // jeśli masz
+  "/api/health",
+  "/api/auth/me",
+  "/api/auth/logout",
 ];
 
 function isAsset(pathname: string) {

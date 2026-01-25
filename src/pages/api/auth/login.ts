@@ -57,7 +57,6 @@ export const POST: APIRoute = async ({ request, cookies, locals, url }) => {
     if (error) {
       logger.error(new Error(error.message), { errorCode: error.status, errorName: error.name, email });
 
-      // throttling / security
       if (error.status === 429 || /security purposes|too many/i.test(error.message)) {
         return new Response(
           JSON.stringify({
@@ -102,14 +101,12 @@ export const POST: APIRoute = async ({ request, cookies, locals, url }) => {
       maxAge: 60 * 60 * 24 * 7,
     });
 
+    // ✅ bez tokenów w body (wystarczy cookies + redirect)
     return new Response(
       JSON.stringify({
         message: "Login successful",
         user: { id: data.user.id, email: data.user.email },
         redirect: "/generate",
-        access_token: data.session.access_token,
-        refresh_token: data.session.refresh_token,
-        expires_in: data.session.expires_in ?? 3600,
       }),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );
