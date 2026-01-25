@@ -1,16 +1,30 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "./ui/button";
-import { supabase } from "@/lib/supabase";
+import { getSupabaseClient } from "@/lib/supabase";
 
 export function Header() {
+  const supabase = useMemo(() => {
+    try {
+      return getSupabaseClient();
+    } catch {
+      // jeśli envów brak, header i tak nie powinien wysadzić całej strony
+      return null;
+    }
+  }, []);
+
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
 
   useEffect(() => {
+    if (!supabase) {
+      setIsLoadingAuth(false);
+      setUserEmail(null);
+      return;
+    }
+
     let isMounted = true;
 
-    // initial load
     supabase.auth
       .getSession()
       .then(({ data }) => {
@@ -24,20 +38,18 @@ export function Header() {
         setIsLoadingAuth(false);
       });
 
-    // listen for auth changes (login/logout)
-    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       setUserEmail(session?.user?.email ?? null);
     });
 
     return () => {
       isMounted = false;
-      subscription.subscription.unsubscribe();
+      sub.subscription.unsubscribe();
     };
-  }, []);
+  }, [supabase]);
 
   const handleLogout = useCallback(async () => {
     if (isLoggingOut) return;
-
     setIsLoggingOut(true);
 
     try {
@@ -46,28 +58,23 @@ export function Header() {
         headers: { "Content-Type": "application/json" },
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to log out");
-      }
+      if (!response.ok) throw new Error("Failed to log out");
 
-      // Po wylogowaniu wyczyść też stan frontu (nie zaszkodzi)
+      // frontend cleanup (opcjonalnie)
       try {
-        await supabase.auth.signOut();
+        await supabase?.auth.signOut();
       } catch {
         // ignore
       }
 
       window.location.href = "/login";
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error("Logout error:", error);
       alert("Failed to log out. Please try again.");
       setIsLoggingOut(false);
     }
-  }, [isLoggingOut]);
+  }, [isLoggingOut, supabase]);
 
-  // Jeśli chcesz, możesz ukryć header całkiem podczas ładowania auth
-  // ale zostawiamy prostą wersję:
   const isAuthenticated = !!userEmail;
 
   return (
@@ -76,7 +83,6 @@ export function Header() {
         <div className="flex items-center gap-8">
           <h1 className="text-xl font-semibold">Flashcards App</h1>
 
-          {/* Nawigacja tylko dla zalogowanych */}
           {isAuthenticated && (
             <nav className="hidden sm:flex gap-4">
               <a href="/session" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
@@ -93,7 +99,6 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-4">
-          {/* Prawa strona */}
           {isLoadingAuth ? (
             <span className="text-sm text-muted-foreground">Ładowanie...</span>
           ) : isAuthenticated ? (
@@ -101,12 +106,12 @@ export function Header() {
               <span className="hidden md:inline text-sm text-muted-foreground" aria-label={`Logged in as ${userEmail}`}>
                 {userEmail}
               </span>
-              <Button onClick={handleLogout} disabled={isLoggingOut} variant="outline" size="sm" aria-label="Log out">
+              <Button onClick={handleLogout} disabled={isLoggingOut} variant="outline" size="sm">
                 {isLoggingOut ? "Logging out..." : "Log out"}
               </Button>
             </>
           ) : (
-            <Button asChild variant="outline" size="sm" aria-label="Go to login">
+            <Button asChild variant="outline" size="sm">
               <a href="/login">Log in</a>
             </Button>
           )}

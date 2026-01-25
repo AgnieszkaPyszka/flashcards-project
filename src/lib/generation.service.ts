@@ -1,4 +1,3 @@
-import crypto from "crypto";
 import type { FlashcardProposalDto, GenerationCreateResponseDto } from "../types";
 import type { SupabaseClient } from "../db/supabase.client";
 import { DEFAULT_USER_ID } from "../db/supabase.client";
@@ -90,7 +89,11 @@ Focus on important facts, definitions, concepts, and relationships.`);
   }
 
   private async calculateHash(text: string): Promise<string> {
-    return crypto.createHash("md5").update(text).digest("hex");
+    const data = new TextEncoder().encode(text);
+    const digest = await crypto.subtle.digest("SHA-256", data);
+    return Array.from(new Uint8Array(digest))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
   }
 
   private async callAIService(text: string): Promise<FlashcardProposalDto[]> {
