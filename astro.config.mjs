@@ -22,8 +22,5 @@ export default defineConfig({
       target: "esnext",
     },
   },
-  adapter: cloudflare({
-    mode: "directory",
-    functionPerRoute: true,
-  }),
+  adapter: cloudflare(),
 });
