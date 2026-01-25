@@ -93,6 +93,7 @@ export function RegisterForm() {
         body: JSON.stringify({ email, password }),
       });
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const data = await response.json().catch(() => ({}) as any);
 
       if (!response.ok) {

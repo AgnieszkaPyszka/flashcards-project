@@ -69,6 +69,7 @@ export function Header() {
 
       window.location.href = "/login";
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Logout error:", error);
       alert("Failed to log out. Please try again.");
       setIsLoggingOut(false);
