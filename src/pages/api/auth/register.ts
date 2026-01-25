@@ -5,7 +5,6 @@ import type { Database } from "@/db/database.types";
 import { Logger } from "@/lib/logger";
 
 const logger = new Logger("auth/register");
-
 export const prerender = false;
 
 const registerSchema = z.object({
@@ -13,16 +12,34 @@ const registerSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters long"),
 });
 
-function getSupabaseEnv(locals: App.Locals) {
-  const runtimeEnv = locals.runtime?.env as Record<string, string | undefined> | undefined;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getEnv(locals: any) {
+  const runtimeEnv = locals?.runtime?.env as Record<string, string | undefined> | undefined;
   const url = runtimeEnv?.PUBLIC_SUPABASE_URL ?? import.meta.env.PUBLIC_SUPABASE_URL;
   const key = runtimeEnv?.PUBLIC_SUPABASE_KEY ?? import.meta.env.PUBLIC_SUPABASE_KEY;
   return { url, key };
 }
 
-export const POST: APIRoute = async ({ request, cookies, locals, url }) => {
+export const POST: APIRoute = async ({ request, locals, url }) => {
   try {
-    const body = await request.json().catch(() => ({}));
+    const { url: supabaseUrl, key: supabaseAnonKey } = getEnv(locals);
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      logger.error(new Error("Missing Supabase env"), {
+        hasUrl: !!supabaseUrl,
+        hasKey: !!supabaseAnonKey,
+      });
+
+      return new Response(
+        JSON.stringify({
+          error: "Server misconfigured",
+          message: "Supabase env not set (PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_KEY)",
+        }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    const body = await request.json().catch(() => null);
     const validationResult = registerSchema.safeParse(body);
 
     if (!validationResult.success) {
@@ -38,17 +55,6 @@ export const POST: APIRoute = async ({ request, cookies, locals, url }) => {
 
     const { email, password } = validationResult.data;
 
-    const { url: supabaseUrl, key: supabaseAnonKey } = getSupabaseEnv(locals);
-    if (!supabaseUrl || !supabaseAnonKey) {
-      return new Response(
-        JSON.stringify({
-          error: "Server misconfigured",
-          message: "Missing PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_KEY",
-        }),
-        { status: 500, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
     const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
       auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
     });
@@ -56,7 +62,17 @@ export const POST: APIRoute = async ({ request, cookies, locals, url }) => {
     const { data, error } = await supabase.auth.signUp({ email, password });
 
     if (error) {
-      logger.error(new Error(error.message), { errorCode: error.status, errorName: error.name, email });
+      logger.error(new Error(error.message), { status: error.status, name: error.name, email });
+
+      if (error.status === 429 || /security purposes|too many/i.test(error.message)) {
+        return new Response(
+          JSON.stringify({
+            error: "Too many requests",
+            message: "Spróbuj ponownie za chwilę (limit bezpieczeństwa).",
+          }),
+          { status: 429, headers: { "Content-Type": "application/json" } }
+        );
+      }
 
       if (
         error.message.includes("already registered") ||
@@ -66,8 +82,7 @@ export const POST: APIRoute = async ({ request, cookies, locals, url }) => {
         return new Response(
           JSON.stringify({
             error: "User already exists",
-            message:
-              "An account with this email already exists. If you forgot your password, please use the 'Forgot Password' option to reset it.",
+            message: "Konto z tym adresem już istnieje. Jeśli nie pamiętasz hasła, użyj opcji resetowania.",
             redirect: "/forgot-password",
           }),
           { status: 409, headers: { "Content-Type": "application/json" } }
@@ -90,33 +105,36 @@ export const POST: APIRoute = async ({ request, cookies, locals, url }) => {
       });
     }
 
-    // Jeśli supabase zwróci session, ustawiamy cookies (czasem przy wyłączonych potwierdzeniach maila)
+    // Jeśli Supabase zwróci session (gdy nie ma email confirmation)
     if (data.session) {
+      const headers = new Headers({ "Content-Type": "application/json" });
+
       const isSecure = url.protocol === "https:";
+      const maxAgeAccess = data.session.expires_in || 3600;
 
-      cookies.set("sb-access-token", data.session.access_token, {
-        path: "/",
-        httpOnly: true,
-        sameSite: "lax",
-        secure: isSecure,
-        maxAge: data.session.expires_in ?? 3600,
-      });
+      headers.append(
+        "Set-Cookie",
+        `sb-access-token=${data.session.access_token}; Path=/; HttpOnly; SameSite=Lax; ${isSecure ? "Secure; " : ""}Max-Age=${maxAgeAccess}`
+      );
+      headers.append(
+        "Set-Cookie",
+        `sb-refresh-token=${data.session.refresh_token}; Path=/; HttpOnly; SameSite=Lax; ${isSecure ? "Secure; " : ""}Max-Age=604800`
+      );
 
-      cookies.set("sb-refresh-token", data.session.refresh_token, {
-        path: "/",
-        httpOnly: true,
-        sameSite: "lax",
-        secure: isSecure,
-        maxAge: 60 * 60 * 24 * 7, // 7 dni
-      });
+      return new Response(
+        JSON.stringify({
+          message: "Registration successful",
+          user: { id: data.user.id, email: data.user.email },
+          redirect: "/",
+        }),
+        { status: 201, headers }
+      );
     }
 
-    // Jeśli email confirmation jest włączone, session może być null → nadal sukces
+    // Jeśli wymagane potwierdzenie maila
     return new Response(
       JSON.stringify({
-        message: data.session
-          ? "Registration successful"
-          : "Registration successful. Please check your email to confirm your account.",
+        message: "Registration successful. Please check your email to confirm your account.",
         user: { id: data.user.id, email: data.user.email },
       }),
       { status: 201, headers: { "Content-Type": "application/json" } }

@@ -5,7 +5,6 @@ import type { Database } from "@/db/database.types";
 import { Logger } from "@/lib/logger";
 
 const logger = new Logger("auth/login");
-
 export const prerender = false;
 
 const loginSchema = z.object({
@@ -58,6 +57,17 @@ export const POST: APIRoute = async ({ request, cookies, locals, url }) => {
     if (error) {
       logger.error(new Error(error.message), { errorCode: error.status, errorName: error.name, email });
 
+      // throttling / security
+      if (error.status === 429 || /security purposes|too many/i.test(error.message)) {
+        return new Response(
+          JSON.stringify({
+            error: "Too many requests",
+            message: "Spróbuj ponownie za chwilę (limit bezpieczeństwa).",
+          }),
+          { status: 429, headers: { "Content-Type": "application/json" } }
+        );
+      }
+
       return new Response(
         JSON.stringify({
           error: "Login failed",
@@ -89,7 +99,7 @@ export const POST: APIRoute = async ({ request, cookies, locals, url }) => {
       httpOnly: true,
       sameSite: "lax",
       secure: isSecure,
-      maxAge: 60 * 60 * 24 * 7, // 7 dni
+      maxAge: 60 * 60 * 24 * 7,
     });
 
     return new Response(
