@@ -21,20 +21,20 @@ export function RegisterForm() {
     confirmPassword?: string;
   }>({});
 
-  const validateEmail = (value: string): string | undefined => {
+  const validateEmail = (value: string) => {
     if (!value) return "Email is required";
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(value)) return "Invalid email format";
     return undefined;
   };
 
-  const validatePassword = (value: string): string | undefined => {
+  const validatePassword = (value: string) => {
     if (!value) return "Password is required";
     if (value.length < 8) return "Password must be at least 8 characters long";
     return undefined;
   };
 
-  const validateConfirmPassword = (value: string, passwordValue: string): string | undefined => {
+  const validateConfirmPassword = (value: string, passwordValue: string) => {
     if (!value) return "Please confirm your password";
     if (value !== passwordValue) return "Passwords do not match";
     return undefined;
