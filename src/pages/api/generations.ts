@@ -1,37 +1,39 @@
 import { z } from "zod";
 import type { APIRoute } from "astro";
-import type { GenerateFlashcardsCommand } from "../../types";
-import { GenerationService } from "../../lib/generation.service";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "../../db/database.types";
+import type { GenerateFlashcardsCommand } from "../../types";
+import { GenerationService } from "../../lib/generation.service";
 
 export const prerender = false;
 
-const generateFlashcardsSchema = z.object({
+const schema = z.object({
   source_text: z.string().min(1000).max(10000),
 });
 
-function getRuntimeEnv() {
+function getRuntimeEnv(locals: App.Locals) {
+  const runtimeEnv = (locals as any)?.runtime?.env as Record<string, string | undefined> | undefined;
+
   return {
-    openRouterKey: import.meta.env.OPENROUTER_API_KEY,
-    supabaseUrl: import.meta.env.PUBLIC_SUPABASE_URL,
-    supabaseAnonKey: import.meta.env.PUBLIC_SUPABASE_KEY,
+    openRouterKey: runtimeEnv?.OPENROUTER_API_KEY ?? import.meta.env.OPENROUTER_API_KEY,
+    supabaseUrl: runtimeEnv?.PUBLIC_SUPABASE_URL ?? import.meta.env.PUBLIC_SUPABASE_URL,
+    supabaseAnonKey: runtimeEnv?.PUBLIC_SUPABASE_KEY ?? import.meta.env.PUBLIC_SUPABASE_KEY,
   };
 }
 
-export const POST: APIRoute = async ({ request, cookies }) => {
+export const POST: APIRoute = async ({ request, locals, cookies }) => {
   try {
     const body = (await request.json()) as GenerateFlashcardsCommand;
 
-    const validationResult = generateFlashcardsSchema.safeParse(body);
-    if (!validationResult.success) {
-      return new Response(JSON.stringify({ error: "Invalid request data", details: validationResult.error.errors }), {
+    const parsed = schema.safeParse(body);
+    if (!parsed.success) {
+      return new Response(JSON.stringify({ error: "Invalid request data", details: parsed.error.errors }), {
         status: 400,
         headers: { "Content-Type": "application/json" },
       });
     }
 
-    const { openRouterKey, supabaseUrl, supabaseAnonKey } = getRuntimeEnv();
+    const { openRouterKey, supabaseUrl, supabaseAnonKey } = getRuntimeEnv(locals);
 
     if (!openRouterKey) {
       return new Response(JSON.stringify({ error: "Server misconfigured", message: "Missing OPENROUTER_API_KEY" }), {
@@ -50,12 +52,6 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       );
     }
 
-    // Workers-safe: twórz klienta Supabase w handlerze
-    const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-    });
-
-    // Podepnij sesję z cookies (tak jak w middleware)
     const accessToken = cookies.get("sb-access-token")?.value;
     const refreshToken = cookies.get("sb-refresh-token")?.value;
 
@@ -65,6 +61,10 @@ export const POST: APIRoute = async ({ request, cookies }) => {
         headers: { "Content-Type": "application/json" },
       });
     }
+
+    const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+    });
 
     const { error: sessionError } = await supabase.auth.setSession({
       access_token: accessToken,
@@ -79,14 +79,13 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     }
 
     const generationService = new GenerationService(supabase, { apiKey: openRouterKey });
-    const result = await generationService.generateFlashcards(body.source_text);
+    const result = await generationService.generateFlashcards(parsed.data.source_text);
 
     return new Response(JSON.stringify(result), {
       status: 201,
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error("[/api/generations] error:", error);
     return new Response(
       JSON.stringify({

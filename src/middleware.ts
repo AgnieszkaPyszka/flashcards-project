@@ -28,6 +28,15 @@ function isPublicRoute(pathname: string) {
   return PUBLIC_ROUTES.includes(pathname) || PUBLIC_API_ROUTES.some((route) => pathname.startsWith(route));
 }
 
+function getEnv(context: Parameters<Parameters<typeof defineMiddleware>[0]>[0]) {
+  const runtimeEnv = (context.locals as any)?.runtime?.env as Record<string, string | undefined> | undefined;
+
+  return {
+    supabaseUrl: runtimeEnv?.PUBLIC_SUPABASE_URL ?? import.meta.env.PUBLIC_SUPABASE_URL,
+    supabaseAnonKey: runtimeEnv?.PUBLIC_SUPABASE_KEY ?? import.meta.env.PUBLIC_SUPABASE_KEY,
+  };
+}
+
 export const onRequest = defineMiddleware(async (context, next) => {
   if (context.url.pathname === "/api/generations") {
     console.log("[middleware] hit /api/generations marker");
@@ -35,10 +44,10 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   if (isAsset(context.url.pathname)) return next();
 
-  const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_KEY;
+  const { supabaseUrl, supabaseAnonKey } = getEnv(context);
 
   if (!supabaseUrl || !supabaseAnonKey) {
+    // Uwaga: tu właśnie robiłaś 500 na cały serwis
     if (context.url.pathname.startsWith("/api/")) {
       return new Response(
         JSON.stringify({
@@ -67,7 +76,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     }
   }
 
-  context.locals.supabase = supabase;
+  (context.locals as any).supabase = supabase;
 
   // guard
   const isPublic = isPublicRoute(context.url.pathname);
