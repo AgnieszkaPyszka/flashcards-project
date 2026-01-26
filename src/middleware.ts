@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-console */
 import { defineMiddleware } from "astro:middleware";
 import { createClient } from "@supabase/supabase-js";
