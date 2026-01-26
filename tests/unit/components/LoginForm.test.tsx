@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeAll, beforeEach, afterAll, afterEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { LoginForm } from "@/components/LoginForm";
@@ -14,18 +14,33 @@ vi.mock("@/lib/supabase", () => ({
 
 // Mock the fetch function
 const mockFetch = vi.fn();
-vi.stubGlobal("fetch", mockFetch);
 
-// Mock window.location
-const mockLocation = vi.fn();
-Object.defineProperty(window, "location", {
-  value: { href: mockLocation },
-  writable: true,
-});
+// Mock window.location (scoped to this file)
+let originalLocation: Location;
 
 describe("LoginForm", () => {
+  beforeAll(() => {
+    originalLocation = window.location;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (window as any).location;
+    window.location = { ...originalLocation, href: "" } as Location;
+  });
+
+  afterAll(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (window as any).location;
+    window.location = originalLocation;
+  });
+
   beforeEach(() => {
     vi.resetAllMocks();
+    vi.stubGlobal("fetch", mockFetch);
+    window.location.href = "";
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+    vi.unstubAllGlobals();
   });
 
   it("renders login form correctly", () => {

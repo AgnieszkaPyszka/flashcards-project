@@ -4,9 +4,8 @@ import userEvent from "@testing-library/user-event";
 import { FlashcardGenerationView } from "@/components/FlashcardGenerationView";
 import type { GenerationCreateResponseDto } from "@/types";
 
-// Mock fetch globally
+// Mock fetch (stub per-test to avoid leaking between files)
 const mockFetch = vi.fn();
-global.fetch = mockFetch;
 
 // Mock toast from sonner (used in BulkSaveButton)
 vi.mock("sonner", () => ({
@@ -29,10 +28,12 @@ describe("FlashcardGenerationView", () => {
   beforeEach(() => {
     // Reset mocks before each test
     vi.resetAllMocks();
+    vi.stubGlobal("fetch", mockFetch);
   });
 
   afterEach(() => {
     vi.clearAllMocks();
+    vi.unstubAllGlobals();
   });
 
   it("renders the component with initial empty state", () => {

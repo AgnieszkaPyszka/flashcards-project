@@ -1,13 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { BulkSaveButton } from "@/components/BulkSaveButton";
 import { toast } from "sonner";
 import type { FlashcardProposalViewModel } from "@/components/FlashcardGenerationView";
 
-// Mock fetch globally
+// Mock fetch (stub per-test to avoid leaking between files)
 const mockFetch = vi.fn();
-global.fetch = mockFetch;
 
 // Mock toast from sonner
 vi.mock("sonner", () => ({
@@ -29,6 +28,12 @@ describe("BulkSaveButton", () => {
 
   beforeEach(() => {
     vi.resetAllMocks();
+    vi.stubGlobal("fetch", mockFetch);
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+    vi.unstubAllGlobals();
   });
 
   it("renders both save buttons", () => {

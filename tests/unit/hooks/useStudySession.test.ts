@@ -1,27 +1,38 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeAll, beforeEach, afterAll, afterEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { useStudySession } from "@/hooks/useStudySession";
 import type { StudyNextResponseDto, RateFlashcardResponseDto } from "@/types";
 
-// Mock fetch globally
+// Mock fetch (stub per-test to avoid leaking between files)
 const mockFetch = vi.fn();
-global.fetch = mockFetch;
 
-// Mock window.location
-const originalLocation = window.location;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-delete (window as any).location;
-window.location = { ...originalLocation, href: "" } as Location;
+// Mock window.location (scoped to this file)
+let originalLocation: Location;
 
 describe("useStudySession", () => {
+  beforeAll(() => {
+    originalLocation = window.location;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (window as any).location;
+    window.location = { ...originalLocation, href: "" } as Location;
+  });
+
   beforeEach(() => {
     mockFetch.mockClear();
+    vi.stubGlobal("fetch", mockFetch);
     window.location.href = "";
     localStorage.clear();
   });
 
+  afterAll(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (window as any).location;
+    window.location = originalLocation;
+  });
+
   afterEach(() => {
     vi.clearAllMocks();
+    vi.unstubAllGlobals();
   });
 
   describe("Initial load", () => {
