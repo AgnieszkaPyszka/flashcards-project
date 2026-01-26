@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { defineMiddleware } from "astro:middleware";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./db/database.types";
@@ -28,13 +29,14 @@ function isPublicRoute(pathname: string) {
 }
 
 export const onRequest = defineMiddleware(async (context, next) => {
+  if (context.url.pathname === "/api/generations") {
+    console.log("[middleware] hit /api/generations marker");
+  }
+
   if (isAsset(context.url.pathname)) return next();
 
-  const runtimeEnv = context.locals.runtime?.env as Record<string, string | undefined> | undefined;
-
-  // ✅ runtime env na Cloudflare + fallback na lokalnie
-  const supabaseUrl = runtimeEnv?.PUBLIC_SUPABASE_URL ?? import.meta.env.PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = runtimeEnv?.PUBLIC_SUPABASE_KEY ?? import.meta.env.PUBLIC_SUPABASE_KEY;
+  const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
     if (context.url.pathname.startsWith("/api/")) {
@@ -58,7 +60,11 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const refreshToken = context.cookies.get("sb-refresh-token")?.value;
 
   if (accessToken && refreshToken) {
-    await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+    try {
+      await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+    } catch (e) {
+      console.warn("[middleware] setSession failed:", e);
+    }
   }
 
   context.locals.supabase = supabase;

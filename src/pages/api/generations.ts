@@ -11,23 +11,15 @@ const generateFlashcardsSchema = z.object({
   source_text: z.string().min(1000).max(10000),
 });
 
-function getRuntimeEnv(locals: App.Locals) {
-  const env = locals.runtime?.env as Record<string, string | undefined> | undefined;
+function getRuntimeEnv() {
   return {
-    openRouterKey: env?.OPENROUTER_API_KEY,
-    supabaseUrl: env?.PUBLIC_SUPABASE_URL,
-    supabaseAnonKey: env?.PUBLIC_SUPABASE_KEY,
+    openRouterKey: import.meta.env.OPENROUTER_API_KEY,
+    supabaseUrl: import.meta.env.PUBLIC_SUPABASE_URL,
+    supabaseAnonKey: import.meta.env.PUBLIC_SUPABASE_KEY,
   };
 }
 
-export const POST: APIRoute = async ({ request, locals, cookies }) => {
-  // ✅ TEMP: marker żeby sprawdzić czy nowy kod jest na Cloudflare
-  return new Response(JSON.stringify({ marker: "generations-v2" }), {
-    status: 200,
-    headers: { "Content-Type": "application/json" },
-  });
-
-  // --- poniżej normalna logika (na razie nieosiągalna przez return) ---
+export const POST: APIRoute = async ({ request, cookies }) => {
   try {
     const body = (await request.json()) as GenerateFlashcardsCommand;
 
@@ -39,7 +31,7 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
       });
     }
 
-    const { openRouterKey, supabaseUrl, supabaseAnonKey } = getRuntimeEnv(locals);
+    const { openRouterKey, supabaseUrl, supabaseAnonKey } = getRuntimeEnv();
 
     if (!openRouterKey) {
       return new Response(JSON.stringify({ error: "Server misconfigured", message: "Missing OPENROUTER_API_KEY" }), {
@@ -47,24 +39,40 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
         headers: { "Content-Type": "application/json" },
       });
     }
+
     if (!supabaseUrl || !supabaseAnonKey) {
       return new Response(
-        JSON.stringify({ error: "Server misconfigured", message: "Missing PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_KEY" }),
+        JSON.stringify({
+          error: "Server misconfigured",
+          message: "Missing PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_KEY",
+        }),
         { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
 
+    // Workers-safe: twórz klienta Supabase w handlerze
     const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
       auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
     });
 
+    // Podepnij sesję z cookies (tak jak w middleware)
     const accessToken = cookies.get("sb-access-token")?.value;
     const refreshToken = cookies.get("sb-refresh-token")?.value;
 
-    if (accessToken && refreshToken) {
-      await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
-    } else {
+    if (!accessToken || !refreshToken) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const { error: sessionError } = await supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+
+    if (sessionError) {
+      return new Response(JSON.stringify({ error: "Unauthorized", message: sessionError.message }), {
         status: 401,
         headers: { "Content-Type": "application/json" },
       });
@@ -78,6 +86,7 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error("[/api/generations] error:", error);
     return new Response(
       JSON.stringify({
