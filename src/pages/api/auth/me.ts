@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { APIRoute } from "astro";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "../../../db/database.types";
@@ -5,9 +6,9 @@ import type { Database } from "../../../db/database.types";
 export const prerender = false;
 
 export const GET: APIRoute = async ({ locals, cookies }) => {
-  const env = locals.runtime?.env as Record<string, string | undefined> | undefined;
-  const supabaseUrl = env?.PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = env?.PUBLIC_SUPABASE_KEY;
+  const env = (locals as any).runtime?.env as Record<string, string | undefined> | undefined;
+  const supabaseUrl = env?.PUBLIC_SUPABASE_URL ?? import.meta.env.PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = env?.PUBLIC_SUPABASE_KEY ?? import.meta.env.PUBLIC_SUPABASE_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
     return new Response(JSON.stringify({ error: "Server misconfigured" }), {

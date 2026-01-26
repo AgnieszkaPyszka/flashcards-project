@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { APIRoute } from "astro";
 import { z } from "zod";
 import { createClient } from "@supabase/supabase-js";
@@ -5,24 +6,36 @@ import type { Database } from "@/db/database.types";
 import { Logger } from "@/lib/logger";
 
 const logger = new Logger("auth/reset-password");
-
-const supabaseUrl = process.env.SUPABASE_URL || import.meta.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_KEY || import.meta.env.SUPABASE_KEY;
-
 export const prerender = false;
 
 const resetPasswordSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters long"),
-  // Note: Supabase sends the token in the URL hash, which is handled client-side
-  // The client extracts the token and includes it in the request
   access_token: z.string().optional(),
   refresh_token: z.string().optional(),
 });
 
-export const POST: APIRoute = async ({ request }) => {
+function getEnv(locals: App.Locals) {
+  const env = (locals as any).runtime?.env as Record<string, string | undefined> | undefined;
+  const supabaseUrl = env?.PUBLIC_SUPABASE_URL ?? import.meta.env.PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = env?.PUBLIC_SUPABASE_KEY ?? import.meta.env.PUBLIC_SUPABASE_KEY;
+  return { supabaseUrl, supabaseAnonKey };
+}
+
+export const POST: APIRoute = async ({ request, locals }) => {
   try {
-    // Parse and validate request body
-    const body = await request.json();
+    const { supabaseUrl, supabaseAnonKey } = getEnv(locals);
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return new Response(
+        JSON.stringify({
+          error: "Server misconfigured",
+          message: "Missing PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_KEY",
+        }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    const body = await request.json().catch(() => ({}));
     const validationResult = resetPasswordSchema.safeParse(body);
 
     if (!validationResult.success) {
@@ -32,25 +45,16 @@ export const POST: APIRoute = async ({ request }) => {
           message: validationResult.error.errors[0]?.message || "Validation failed",
           details: validationResult.error.errors,
         }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        }
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
     const { password, access_token, refresh_token } = validationResult.data;
 
-    // Create a fresh Supabase client for authentication
     const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-        detectSessionInUrl: false,
-      },
+      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
     });
 
-    // If tokens are provided, set the session first
     if (access_token && refresh_token) {
       const { error: sessionError } = await supabase.auth.setSession({
         access_token,
@@ -68,14 +72,10 @@ export const POST: APIRoute = async ({ request }) => {
             error: "Invalid or expired token",
             message: "The reset token is invalid or has expired. Please request a new password reset link.",
           }),
-          {
-            status: 400,
-            headers: { "Content-Type": "application/json" },
-          }
+          { status: 400, headers: { "Content-Type": "application/json" } }
         );
       }
     } else {
-      // Try to get session from current state (in case token was already processed)
       const {
         data: { session },
         error: sessionError,
@@ -87,18 +87,12 @@ export const POST: APIRoute = async ({ request }) => {
             error: "Invalid or expired token",
             message: "The reset token is invalid or has expired. Please request a new password reset link.",
           }),
-          {
-            status: 400,
-            headers: { "Content-Type": "application/json" },
-          }
+          { status: 400, headers: { "Content-Type": "application/json" } }
         );
       }
     }
 
-    // Update the password with the authenticated session
-    const { error: updateError } = await supabase.auth.updateUser({
-      password: password,
-    });
+    const { error: updateError } = await supabase.auth.updateUser({ password });
 
     if (updateError) {
       logger.error(new Error(updateError.message), {
@@ -111,26 +105,17 @@ export const POST: APIRoute = async ({ request }) => {
           error: "Failed to reset password",
           message: updateError.message || "Failed to reset password. Please try again.",
         }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        }
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
-    // Create response with redirect to login page
-    const response = new Response(
+    return new Response(
       JSON.stringify({
         message: "Password has been reset successfully. You can now log in with your new password.",
         redirect: "/login",
       }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      }
+      { status: 200, headers: { "Content-Type": "application/json" } }
     );
-
-    return response;
   } catch (error) {
     logger.error(error instanceof Error ? error : new Error(String(error)), {
       operation: "reset-password",
@@ -141,10 +126,7 @@ export const POST: APIRoute = async ({ request }) => {
         error: "Internal server error",
         message: "An unexpected error occurred. Please try again later.",
       }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 };

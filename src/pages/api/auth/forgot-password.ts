@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { APIRoute } from "astro";
 import { z } from "zod";
 import { createClient } from "@supabase/supabase-js";
@@ -5,19 +6,28 @@ import type { Database } from "@/db/database.types";
 import { Logger } from "@/lib/logger";
 
 const logger = new Logger("auth/forgot-password");
-
-const supabaseUrl = process.env.SUPABASE_URL || import.meta.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_KEY || import.meta.env.SUPABASE_KEY;
-
 export const prerender = false;
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("Invalid email format"),
 });
 
-export const POST: APIRoute = async ({ request }) => {
+function getEnv(locals: App.Locals) {
+  const env = (locals as any).runtime?.env as Record<string, string | undefined> | undefined;
+
+  const supabaseUrl = env?.PUBLIC_SUPABASE_URL ?? import.meta.env.PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = env?.PUBLIC_SUPABASE_KEY ?? import.meta.env.PUBLIC_SUPABASE_KEY;
+
+  // opcjonalnie, jeśli masz SITE_URL ustawione w Cloudflare
+  const siteUrl = env?.SITE_URL ?? import.meta.env.SITE_URL;
+
+  return { supabaseUrl, supabaseAnonKey, siteUrl };
+}
+
+export const POST: APIRoute = async ({ request, locals, url }) => {
   try {
-    // Validate environment variables
+    const { supabaseUrl, supabaseAnonKey, siteUrl } = getEnv(locals);
+
     if (!supabaseUrl || !supabaseAnonKey) {
       logger.error(new Error("Missing Supabase configuration"), {
         hasUrl: !!supabaseUrl,
@@ -29,15 +39,11 @@ export const POST: APIRoute = async ({ request }) => {
           error: "Server configuration error",
           message: "Server is not properly configured. Please contact support.",
         }),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json" },
-        }
+        { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
 
-    // Parse and validate request body
-    const body = await request.json();
+    const body = await request.json().catch(() => ({}));
     const validationResult = forgotPasswordSchema.safeParse(body);
 
     if (!validationResult.success) {
@@ -47,38 +53,23 @@ export const POST: APIRoute = async ({ request }) => {
           message: validationResult.error.errors[0]?.message || "Validation failed",
           details: validationResult.error.errors,
         }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        }
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
     const { email } = validationResult.data;
 
-    // Create a fresh Supabase client for authentication
     const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-        detectSessionInUrl: false,
-      },
+      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
     });
 
-    // Send password reset email
-    // Note: Supabase will send the email even if the user doesn't exist (for security)
-    // The redirect URL should point to your reset password page
-    // Use localhost instead of 127.0.0.1 for better browser compatibility
-    const baseUrl = process.env.SITE_URL || import.meta.env.SITE_URL || "http://localhost:3000";
+    // ✅ baseUrl: jeśli masz SITE_URL w CF to super, jeśli nie to bierz z requesta
+    const baseUrl = siteUrl ?? `${url.protocol}//${url.host}`;
     const redirectUrl = `${baseUrl}/reset-password`;
 
-    logger.warn("Sending password reset email", {
-      email: email,
-      redirectUrl: redirectUrl,
-      supabaseUrl: supabaseUrl,
-    });
+    logger.warn("Sending password reset email", { email, redirectUrl });
 
-    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: redirectUrl,
     });
 
@@ -86,8 +77,7 @@ export const POST: APIRoute = async ({ request }) => {
       logger.error(new Error(error.message), {
         errorCode: error.status,
         errorName: error.name,
-        email: email,
-        errorDetails: error,
+        email,
       });
 
       return new Response(
@@ -95,27 +85,15 @@ export const POST: APIRoute = async ({ request }) => {
           error: "Failed to send reset email",
           message: error.message || "Failed to send password reset email. Please try again.",
         }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        }
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
-    logger.warn("Password reset email sent successfully", {
-      email: email,
-      data: data,
-    });
-
-    // Always return success message (for security - don't reveal if email exists)
     return new Response(
       JSON.stringify({
         message: "If an account with that email exists, a password reset link has been sent.",
       }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      }
+      { status: 200, headers: { "Content-Type": "application/json" } }
     );
   } catch (error) {
     logger.error(error instanceof Error ? error : new Error(String(error)), {
@@ -127,10 +105,7 @@ export const POST: APIRoute = async ({ request }) => {
         error: "Internal server error",
         message: "An unexpected error occurred. Please try again later.",
       }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 };

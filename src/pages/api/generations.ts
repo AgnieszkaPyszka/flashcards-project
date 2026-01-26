@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-console */
 import { z } from "zod";
 import type { APIRoute } from "astro";
@@ -13,13 +14,13 @@ const generateFlashcardsSchema = z.object({
 });
 
 function getRuntimeEnv(locals: App.Locals) {
-  const env = locals.runtime?.env as Record<string, string | undefined> | undefined;
+  const env = (locals as any).runtime?.env as Record<string, string | undefined> | undefined;
 
-  return {
-    openRouterKey: env?.OPENROUTER_API_KEY ?? import.meta.env.OPENROUTER_API_KEY,
-    supabaseUrl: env?.PUBLIC_SUPABASE_URL ?? import.meta.env.PUBLIC_SUPABASE_URL,
-    supabaseAnonKey: env?.PUBLIC_SUPABASE_KEY ?? import.meta.env.PUBLIC_SUPABASE_KEY,
-  };
+  const openRouterKey = env?.OPENROUTER_API_KEY ?? import.meta.env.OPENROUTER_API_KEY;
+  const supabaseUrl = env?.PUBLIC_SUPABASE_URL ?? import.meta.env.PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = env?.PUBLIC_SUPABASE_KEY ?? import.meta.env.PUBLIC_SUPABASE_KEY;
+
+  return { openRouterKey, supabaseUrl, supabaseAnonKey };
 }
 
 export const POST: APIRoute = async ({ request, locals, cookies }) => {
@@ -53,12 +54,11 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
       );
     }
 
-    // Workers-safe: twórz klienta w handlerze
+    // ✅ Workers-safe: client tylko w handlerze
     const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
       auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
     });
 
-    // cookies -> session
     const accessToken = cookies.get("sb-access-token")?.value;
     const refreshToken = cookies.get("sb-refresh-token")?.value;
 
