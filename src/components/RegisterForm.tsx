@@ -5,7 +5,6 @@ import { Label } from "@/components/ui/label";
 import { ErrorNotification } from "./ErrorNotification";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getSupabaseClient } from "@/lib/supabase";
 
 export function RegisterForm() {
   const supabase = getSupabaseClient();
@@ -148,4 +147,7 @@ export function RegisterForm() {
       </Button>
     </form>
   );
+}
+function getSupabaseClient() {
+  throw new Error("Function not implemented.");
 }

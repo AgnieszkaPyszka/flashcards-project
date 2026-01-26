@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-console */
 import { defineMiddleware } from "astro:middleware";
-import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./db/database.types";
+import { getSupabaseServerClient } from "./db/supabase.client";
 
 const PUBLIC_ROUTES = ["/login", "/register", "/forgot-password", "/reset-password"];
 const PUBLIC_API_ROUTES = [
@@ -29,26 +30,16 @@ function isPublicRoute(pathname: string) {
   return PUBLIC_ROUTES.includes(pathname) || PUBLIC_API_ROUTES.some((route) => pathname.startsWith(route));
 }
 
-function getEnv(context: Parameters<Parameters<typeof defineMiddleware>[0]>[0]) {
-  const runtimeEnv = (context.locals as any)?.runtime?.env as Record<string, string | undefined> | undefined;
-
-  return {
-    supabaseUrl: runtimeEnv?.PUBLIC_SUPABASE_URL ?? import.meta.env.PUBLIC_SUPABASE_URL,
-    supabaseAnonKey: runtimeEnv?.PUBLIC_SUPABASE_KEY ?? import.meta.env.PUBLIC_SUPABASE_KEY,
-  };
-}
-
 export const onRequest = defineMiddleware(async (context, next) => {
-  if (context.url.pathname === "/api/generations") {
-    console.log("[middleware] hit /api/generations marker");
-  }
-
   if (isAsset(context.url.pathname)) return next();
 
-  const { supabaseUrl, supabaseAnonKey } = getEnv(context);
+  let supabase: ReturnType<typeof getSupabaseServerClient>;
 
-  if (!supabaseUrl || !supabaseAnonKey) {
-    // Uwaga: tu właśnie robiłaś 500 na cały serwis
+  try {
+    supabase = getSupabaseServerClient(context.locals);
+  } catch (e) {
+    console.error("[middleware] supabase env error:", e);
+
     if (context.url.pathname.startsWith("/api/")) {
       return new Response(
         JSON.stringify({
@@ -60,10 +51,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
     }
     return new Response("Server misconfigured: missing Supabase env", { status: 500 });
   }
-
-  const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-  });
 
   // cookies → session
   const accessToken = context.cookies.get("sb-access-token")?.value;

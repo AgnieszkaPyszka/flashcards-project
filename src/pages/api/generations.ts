@@ -2,8 +2,6 @@
 /* eslint-disable no-console */
 import { z } from "zod";
 import type { APIRoute } from "astro";
-import { createClient } from "@supabase/supabase-js";
-import type { Database } from "../../db/database.types";
 import type { GenerateFlashcardsCommand } from "../../types";
 import { GenerationService } from "../../lib/generation.service";
 
@@ -13,17 +11,12 @@ const generateFlashcardsSchema = z.object({
   source_text: z.string().min(1000).max(10000),
 });
 
-function getRuntimeEnv(locals: App.Locals) {
+function getOpenRouterKey(locals: App.Locals) {
   const env = (locals as any).runtime?.env as Record<string, string | undefined> | undefined;
-
-  const openRouterKey = env?.OPENROUTER_API_KEY ?? import.meta.env.OPENROUTER_API_KEY;
-  const supabaseUrl = env?.PUBLIC_SUPABASE_URL ?? import.meta.env.PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = env?.PUBLIC_SUPABASE_KEY ?? import.meta.env.PUBLIC_SUPABASE_KEY;
-
-  return { openRouterKey, supabaseUrl, supabaseAnonKey };
+  return env?.OPENROUTER_API_KEY ?? import.meta.env.OPENROUTER_API_KEY;
 }
 
-export const POST: APIRoute = async ({ request, locals, cookies }) => {
+export const POST: APIRoute = async ({ request, locals }) => {
   try {
     const body = (await request.json()) as GenerateFlashcardsCommand;
 
@@ -35,8 +28,7 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
       });
     }
 
-    const { openRouterKey, supabaseUrl, supabaseAnonKey } = getRuntimeEnv(locals);
-
+    const openRouterKey = getOpenRouterKey(locals);
     if (!openRouterKey) {
       return new Response(JSON.stringify({ error: "Server misconfigured", message: "Missing OPENROUTER_API_KEY" }), {
         status: 500,
@@ -44,39 +36,11 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
       });
     }
 
-    if (!supabaseUrl || !supabaseAnonKey) {
-      return new Response(
-        JSON.stringify({
-          error: "Server misconfigured",
-          message: "Missing PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_KEY",
-        }),
-        { status: 500, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    // ✅ Workers-safe: client tylko w handlerze
-    const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-    });
-
-    const accessToken = cookies.get("sb-access-token")?.value;
-    const refreshToken = cookies.get("sb-refresh-token")?.value;
-
-    if (!accessToken || !refreshToken) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-
-    const { error: sessionError } = await supabase.auth.setSession({
-      access_token: accessToken,
-      refresh_token: refreshToken,
-    });
-
-    if (sessionError) {
-      return new Response(JSON.stringify({ error: "Unauthorized", message: sessionError.message }), {
-        status: 401,
+    // ✅ Supabase z middleware (już po setSession)
+    const supabase = (locals as any).supabase;
+    if (!supabase) {
+      return new Response(JSON.stringify({ error: "Server misconfigured", message: "Missing locals.supabase" }), {
+        status: 500,
         headers: { "Content-Type": "application/json" },
       });
     }
