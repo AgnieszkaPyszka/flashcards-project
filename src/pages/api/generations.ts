@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { z } from "zod";
 import type { APIRoute } from "astro";
 import { createClient } from "@supabase/supabase-js";
