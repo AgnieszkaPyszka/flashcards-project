@@ -1,5 +1,4 @@
 /* eslint-disable no-console */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { z } from "zod";
 import type { APIRoute } from "astro";
 import { createClient } from "@supabase/supabase-js";
@@ -9,17 +8,17 @@ import { GenerationService } from "../../lib/generation.service";
 
 export const prerender = false;
 
-const schema = z.object({
+const generateFlashcardsSchema = z.object({
   source_text: z.string().min(1000).max(10000),
 });
 
 function getRuntimeEnv(locals: App.Locals) {
-  const runtimeEnv = (locals as any)?.runtime?.env as Record<string, string | undefined> | undefined;
+  const env = locals.runtime?.env as Record<string, string | undefined> | undefined;
 
   return {
-    openRouterKey: runtimeEnv?.OPENROUTER_API_KEY ?? import.meta.env.OPENROUTER_API_KEY,
-    supabaseUrl: runtimeEnv?.PUBLIC_SUPABASE_URL ?? import.meta.env.PUBLIC_SUPABASE_URL,
-    supabaseAnonKey: runtimeEnv?.PUBLIC_SUPABASE_KEY ?? import.meta.env.PUBLIC_SUPABASE_KEY,
+    openRouterKey: env?.OPENROUTER_API_KEY ?? import.meta.env.OPENROUTER_API_KEY,
+    supabaseUrl: env?.PUBLIC_SUPABASE_URL ?? import.meta.env.PUBLIC_SUPABASE_URL,
+    supabaseAnonKey: env?.PUBLIC_SUPABASE_KEY ?? import.meta.env.PUBLIC_SUPABASE_KEY,
   };
 }
 
@@ -27,9 +26,9 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
   try {
     const body = (await request.json()) as GenerateFlashcardsCommand;
 
-    const parsed = schema.safeParse(body);
-    if (!parsed.success) {
-      return new Response(JSON.stringify({ error: "Invalid request data", details: parsed.error.errors }), {
+    const validation = generateFlashcardsSchema.safeParse(body);
+    if (!validation.success) {
+      return new Response(JSON.stringify({ error: "Invalid request data", details: validation.error.errors }), {
         status: 400,
         headers: { "Content-Type": "application/json" },
       });
@@ -54,6 +53,12 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
       );
     }
 
+    // Workers-safe: twórz klienta w handlerze
+    const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+    });
+
+    // cookies -> session
     const accessToken = cookies.get("sb-access-token")?.value;
     const refreshToken = cookies.get("sb-refresh-token")?.value;
 
@@ -63,10 +68,6 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
         headers: { "Content-Type": "application/json" },
       });
     }
-
-    const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-    });
 
     const { error: sessionError } = await supabase.auth.setSession({
       access_token: accessToken,
@@ -81,7 +82,7 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
     }
 
     const generationService = new GenerationService(supabase, { apiKey: openRouterKey });
-    const result = await generationService.generateFlashcards(parsed.data.source_text);
+    const result = await generationService.generateFlashcards(body.source_text);
 
     return new Response(JSON.stringify(result), {
       status: 201,
