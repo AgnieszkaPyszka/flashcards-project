@@ -1,9 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-console */
 import { defineMiddleware } from "astro:middleware";
-import type { Database } from "./db/database.types";
-import { getSupabaseServerClient } from "./db/supabase.client";
+import { getSupabaseServerClient } from "@/db/supabase.client";
 
 const PUBLIC_ROUTES = ["/login", "/register", "/forgot-password", "/reset-password"];
 const PUBLIC_API_ROUTES = [
@@ -33,22 +31,24 @@ function isPublicRoute(pathname: string) {
 export const onRequest = defineMiddleware(async (context, next) => {
   if (isAsset(context.url.pathname)) return next();
 
-  let supabase: ReturnType<typeof getSupabaseServerClient>;
+  // ✅ w dev nie zabijaj całej strony 500, tylko przepuść publiczne trasy
+  const isPublic = isPublicRoute(context.url.pathname);
 
+  let supabase;
   try {
     supabase = getSupabaseServerClient(context.locals);
   } catch (e) {
     console.error("[middleware] supabase env error:", e);
 
+    if (isPublic) return next(); // publiczne strony niech działają w dev
+
     if (context.url.pathname.startsWith("/api/")) {
-      return new Response(
-        JSON.stringify({
-          error: "Server misconfigured",
-          details: "Missing PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_KEY",
-        }),
-        { status: 500, headers: { "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Server misconfigured" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
     }
+
     return new Response("Server misconfigured: missing Supabase env", { status: 500 });
   }
 
@@ -66,8 +66,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   (context.locals as any).supabase = supabase;
 
-  // guard
-  const isPublic = isPublicRoute(context.url.pathname);
   if (!isPublic) {
     const { data } = await supabase.auth.getSession();
     if (!data.session) {

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { getSupabaseClient } from "@/lib/supabase";
+import { getSupabaseBrowserClient } from "@/db/supabase.client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,9 +7,9 @@ import { ErrorNotification } from "./ErrorNotification";
 import { Loader2 } from "lucide-react";
 
 export function LoginForm() {
-  let supabase: ReturnType<typeof getSupabaseClient> | null = null;
+  let supabase: ReturnType<typeof getSupabaseBrowserClient> | null = null;
   try {
-    supabase = getSupabaseClient();
+    supabase = getSupabaseBrowserClient();
   } catch {
     supabase = null;
   }
