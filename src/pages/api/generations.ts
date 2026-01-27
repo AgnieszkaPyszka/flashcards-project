@@ -31,6 +31,16 @@ export const POST: APIRoute = async ({ request, locals }) => {
       openRouterKey?.length ?? 0
     );
 
+    if (openRouterKey) {
+      const keyHash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(openRouterKey));
+
+      const hex = Array.from(new Uint8Array(keyHash))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+
+      console.log("[generations] OPENROUTER key sha256:", hex.slice(0, 12));
+    }
+
     if (!openRouterKey) {
       return new Response(JSON.stringify({ error: "Server misconfigured", message: "Missing OPENROUTER_API_KEY" }), {
         status: 500,
