@@ -13,6 +13,7 @@ const generateFlashcardsSchema = z.object({
 
 function getOpenRouterKey(locals: App.Locals) {
   const env = (locals as any).runtime?.env as Record<string, string | undefined> | undefined;
+  console.log("[generations] OPENROUTER_API_KEY present?", Boolean(openRouterKey), "len:", openRouterKey?.length ?? 0);
   return env?.OPENROUTER_API_KEY ?? import.meta.env.OPENROUTER_API_KEY;
 }
 
