@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { z } from "zod";
 import type { ModelParameters, RequestPayload, ApiResponse } from "./openrouter.types.js";
 import { OpenRouterError, requestPayloadSchema, apiResponseSchema } from "./openrouter.types.js";
@@ -265,29 +266,58 @@ export class OpenRouterService {
     let lastError: Error | null = null;
     let attempt = 0;
 
+    // Cloudflare Workers: prefer manual AbortController over AbortSignal.timeout
+    const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
     while (attempt < this.maxRetries) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), this.defaultTimeout);
+
       try {
+        this.logger.warn("[OpenRouter] auth header ok?", {
+          startsWithBearer: `Bearer ${this.apiKey}`.startsWith("Bearer "),
+          apiKeyLen: this.apiKey?.length ?? 0,
+          apiUrl: this.apiUrl,
+        });
+
         const response = await fetch(`${this.apiUrl}/chat/completions`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${this.apiKey}`,
+
+            // ✅ recommended by OpenRouter
+            "HTTP-Referer": "https://flashcards-project.pages.dev",
+            "X-Title": "Flashcards App",
           },
           body: JSON.stringify(requestPayload),
-          signal: AbortSignal.timeout(this.defaultTimeout),
+          signal: controller.signal,
         });
 
+        clearTimeout(timeoutId);
+
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new OpenRouterError(errorData.message || `HTTP error ${response.status}`, "API_ERROR", response.status);
+          const text = await response.text().catch(() => "");
+          let errorData: any = {};
+          try {
+            errorData = text ? JSON.parse(text) : {};
+          } catch {
+            // ignore JSON parse
+          }
+
+          throw new OpenRouterError(
+            errorData?.message || errorData?.error?.message || `HTTP error ${response.status}`,
+            "API_ERROR",
+            response.status
+          );
         }
 
-        const data = await response.json();
-        return data as ApiResponse;
+        const data = (await response.json()) as ApiResponse;
+        return data;
       } catch (error) {
+        clearTimeout(timeoutId);
         lastError = error as Error;
 
-        // Log retry attempts
         this.logger.warn(`Request failed, attempt ${attempt + 1} of ${this.maxRetries}`, {
           attempt: attempt + 1,
           maxRetries: this.maxRetries,
@@ -295,18 +325,18 @@ export class OpenRouterService {
           status: error instanceof OpenRouterError ? error.status : undefined,
         });
 
-        // Don't retry on authentication errors or invalid requests
-        if (error instanceof OpenRouterError && (error.status === 401 || error.status === 400)) {
-          this.logger.error(error, {
-            status: error.status,
-            code: error.code,
-          });
+        // Don't retry on auth/invalid request
+        if (
+          error instanceof OpenRouterError &&
+          (error.status === 401 || error.status === 400 || error.status === 403)
+        ) {
+          this.logger.error(error, { status: error.status, code: error.code });
           throw error;
         }
 
         // Exponential backoff
         const delay = Math.min(1000 * Math.pow(2, attempt), 8000);
-        await new Promise((resolve) => setTimeout(resolve, delay));
+        await sleep(delay);
 
         attempt++;
       }
@@ -314,11 +344,7 @@ export class OpenRouterService {
 
     const maxRetriesError = lastError || new OpenRouterError("Maximum retry attempts exceeded", "MAX_RETRIES_EXCEEDED");
 
-    this.logger.error(maxRetriesError, {
-      attempts: attempt,
-      maxRetries: this.maxRetries,
-    });
-
+    this.logger.error(maxRetriesError, { attempts: attempt, maxRetries: this.maxRetries });
     throw maxRetriesError;
   }
 }
