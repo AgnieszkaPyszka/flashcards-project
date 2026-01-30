@@ -1,0 +1,25 @@
+{
+  "cookies": [
+    {
+      "name": "sb-access-token",
+      "value": "eyJhbGciOiJIUzI1NiIsImtpZCI6IlQrRnFCQ04vUnEwUXR1MUUiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2xkbXVsdHdra3RuYmhvYm1kcGFxLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiJmNzE2YjIyYi0wODRjLTRhODctYWI2YS05N2EzZDIzZWRjMmIiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzY5ODA1NjcyLCJpYXQiOjE3Njk4MDIwNzIsImVtYWlsIjoidGVzdC51c2VyQGdtYWlsLmNvbSIsInBob25lIjoiIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWxfdmVyaWZpZWQiOnRydWV9LCJyb2xlIjoiYXV0aGVudGljYXRlZCIsImFhbCI6ImFhbDEiLCJhbXIiOlt7Im1ldGhvZCI6InBhc3N3b3JkIiwidGltZXN0YW1wIjoxNzY5ODAyMDcyfV0sInNlc3Npb25faWQiOiI4NzczMmE2ZS0yMmM3LTQyYjEtYmM1ZC1kMDI4ODQzNGVkNzUiLCJpc19hbm9ueW1vdXMiOmZhbHNlfQ.H2WQIbN5OrNrWxqkd4Bj9RvM1zTDYFjuBWMYSzJHuJA",
+      "domain": "localhost",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "sb-refresh-token",
+      "value": "bjv5dqxpfzex",
+      "domain": "localhost",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": []
+}

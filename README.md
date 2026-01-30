@@ -100,7 +100,17 @@ The following npm scripts are available in this project:
 
 ## Deployments & Releases
 
-The application is hosted on Cloudflare Pages. The deployment strategy is based on a CI/CD pipeline using GitHub Actions, which automatically builds and deploys the application upon pushes to the main branch.
+The application is hosted on Cloudflare Pages. The deployment strategy uses a GitHub Actions workflow that runs lint + unit tests + build, and then deploys to Cloudflare Pages. Deployment is triggered manually via `workflow_dispatch` (from the GitHub Actions UI).
+
+### Public URL
+
+- [Cloudflare Pages (public)](https://ea49c30a.flashcards-project.pages.dev)
+
+### User-perspective test (minimum one)
+
+The project includes tests that verify behavior from a user interaction perspective (React Testing Library + `user-event`):
+
+- **`tests/unit/components/FlashcardGenerationView.test.tsx`**: scenario **"allows accepting and rejecting flashcards"** simulates a user generating flashcards, accepting/rejecting items, and verifies the expected UI state (e.g. enabling/disabling the "Save Accepted" action).
 
 For a detailed analysis of the hosting choice and strategy, see the [Hosting Strategy Document](/.ai/deployments.md).
 

@@ -6,7 +6,7 @@ test.describe("Login Page", () => {
     const loginPage = new LoginPage(page);
 
     await loginPage.goto();
-    await loginPage.login("test.user@gmail.com", "test");
+    await loginPage.login(process.env.E2E_USERNAME, process.env.E2E_PASSWORD);
 
     await loginPage.expectSuccessfulLogin();
   });

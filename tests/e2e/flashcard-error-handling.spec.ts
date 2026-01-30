@@ -2,10 +2,11 @@ import { test, expect } from "@playwright/test";
 import { GeneratePage } from "./models/GeneratePage";
 import { LoginPage } from "./models/LoginPage";
 
-// Użyj projektu z zapisanym stanem uwierzytelniania
-//test.use({ storageState: "playwright/.auth/state.json" });
-
 test.describe("Flashcard Error Handling", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/generate"); // albo gdzie test zaczyna
+  });
+
   test("Shows error message when API fails", async ({ page }) => {
     const loginPage = new LoginPage(page);
     await loginPage.goto();
